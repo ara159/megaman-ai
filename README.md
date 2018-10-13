@@ -7,7 +7,14 @@ A príncipio nossos estudos serão focados nas técnicas de CV, em como interpre
 
 Para o desenvovimento e prototipação iremos usar o seguinte ambiente:
 ```
+Linux (Debian like distros)
+nestopia
 python3.7
-python3-opencv2
-python3-mss
 ```
+
+## Instalando ferramentas
+* python3-opencv2: `pip3 install opencv-python`
+
+* python3-mss: `pip3 install mss`
+
+* nestopia: `apt-get install nestopia`
