@@ -59,6 +59,7 @@ with mss.mss() as cpt:
         # Calculo a vida restante fazendo uma contagem de pixels brancos
         # e fazendo uma porcentagem do que ainda tem em ralação ao total
         vida = int((((hp == 255).sum() - HP_MIN) / (HP_TOT)) * 100)
+        
         # Escreve na imagem o HP
         cv2.putText(img, str(vida)+"%", (30, 30), cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1)
         
@@ -79,7 +80,7 @@ with mss.mss() as cpt:
         # Exibe a janela do game
         if MODO_EXIB == COLORIDO:
             cv2.rectangle(img, L_HP[0], L_HP[1], (255,255,255), 1)    
-            cv2.imshow("Megaman-CV", img)
+            cv2.imshow("MegamanCV", img)
         elif MODO_EXIB == THRESHOLD:
             cv2.rectangle(th, L_HP[0], L_HP[1], (255,255,255), 1)    
-            cv2.imshow("Megaman-CV", th)
+            cv2.imshow("MegamanCV", th)
