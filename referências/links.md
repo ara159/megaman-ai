@@ -12,3 +12,5 @@ Código Fonte: https://pastebin.com/ZZmSNaHX
 Paper: http://nn.cs.utexas.edu/downloads/papers/stanley.ec02.pdf
 
 Emulador: http://tasvideos.org/BizHawk.html
+
+Livro Haykin:https://www.ebah.com.br/content/ABAAAgZIIAE/redes-neurais-principios-pratica-2-ed
