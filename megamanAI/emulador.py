@@ -16,7 +16,7 @@ class Emulador(Thread):
 
 	def run(self):
 		args = shlex.split("nestopia -s "+str(self.escala)+" "+self.room)
-		retorno = subprocess.run(args, stdout=subprocess.DEVNULL, 
+		retorno = subprocess.run(args, stdout=subprocess.DEVNULL,
 									stderr=subprocess.DEVNULL) # Bloqueia a thread
 		if retorno.returncode != 0:
 			print("Não foi possivel iniciar o emulador")
@@ -32,7 +32,7 @@ class ManterEmulador(Thread):
 		# posicao
 		pos = str(th_emulador.posicao[0])+","+str(th_emulador.posicao[1])
 		self.cmd_posicao = shlex.split("wmctrl -r '"+th_emulador.getName()+"' -e 0,"+pos+",-1,-1")
-		
+
 		self.delay = delay
 
 	def run(self):
@@ -50,7 +50,7 @@ class Controle(Controller):
 	baixo = Key.down
 	pause = Key.enter
 	carregar = Key.f7
-	
+
 	pressionados = []
 
 	def __init__(self, emulador):
@@ -65,7 +65,7 @@ class Controle(Controller):
 	def pular(self, click=False, verify_emu=True):
 		if not self.emulador.isAlive():
 			return
-		if click: 
+		if click:
 			self._click(self.pulo)
 		else:
 			self.press(self.pulo)
@@ -74,16 +74,16 @@ class Controle(Controller):
 	def disparar(self, click=False):
 		if not self.emulador.isAlive():
 			return
-		if click: 
+		if click:
 			self._click(self.disparo)
 		else:
 			self.press(self.disparo)
 			self.pressionados.append(self.disparo)
-	
+
 	def andar_direita(self, click=False):
 		if not self.emulador.isAlive():
 			return
-		if click: 
+		if click:
 			self._click(self.direita)
 		else:
 			self.press(self.direita)
@@ -92,30 +92,30 @@ class Controle(Controller):
 	def andar_esquerda(self, click=False):
 		if not self.emulador.isAlive():
 			return
-		if click: 
+		if click:
 			self._click(self.esquerda)
 		else:
 			self.press(self.esquerda)
-			self.pressionados.append(self.esquerda)		
-		
+			self.pressionados.append(self.esquerda)
+
 	def subir(self, click=False):
 		if not self.emulador.isAlive():
 			return
-		if click: 
+		if click:
 			self._click(self.cima)
 		else:
 			self.press(self.cima)
 			self.pressionados.append(self.cima)
-		
+
 	def descer(self, click=False):
 		if not self.emulador.isAlive():
 			return
-		if click: 
+		if click:
 			self._click(self.baixo)
 		else:
 			self.press(self.baixo)
 			self.pressionados.append(self.baixo)
-	
+
 	def pausar(self):
 		if not self.emulador.isAlive():
 			return
@@ -140,7 +140,7 @@ class Controle(Controller):
 	def soltar_subir(self):
 		self.release(self.cima)
 		self.pressionados.remove(self.cima)
-	
+
 	def soltar_descer(self):
 		self.release(self.baixo)
 		self.pressionados.remove(self.baixo)
@@ -148,4 +148,3 @@ class Controle(Controller):
 	def soltar_controle(self):
 		for botao in self.pressionados:
 			self.release(botao)
-	
