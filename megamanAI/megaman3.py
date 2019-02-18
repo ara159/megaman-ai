@@ -1,4 +1,4 @@
-import emulador
+from megamanAI import emulador
 from time import sleep
 
 from megamanAI.emulador import Controle
@@ -65,8 +65,6 @@ class MegaMan3:
         mm = MegaMan({
             "parado": "sprites/sprite_megaman_parado.png",
             "correndo_1": "sprites/sprite_megaman_correndo1.png",
-            "correndo_2": "sprites/sprite_megaman_correndo2.png",
-            "correndo_3": "sprites/sprite_megaman_correndo3.png",
         })
 
         hp = HP(Ponto(24, 16), Ponto(31, 72))
@@ -91,6 +89,6 @@ class MegaMan3:
 
             cv2.imshow("megaman-cv", img)
 
-            if cv2.waitKey(1) and not emu.isAlive():
+            if cv2.waitKey(1) and not self.emulador.isAlive():
                 cv2.destroyAllWindows()
                 break
