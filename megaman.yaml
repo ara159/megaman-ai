@@ -1,0 +1,34 @@
+video: 
+  top: 197
+  left: 245
+  width: 448
+  height: 404
+
+sprites:
+  parado:
+  - "sprites/1.png"
+  - "sprites/2.png"
+  - "sprites/3.png"
+  andando:
+  - "sprites/4.png"
+  - "sprites/5.png"
+  - "sprites/6.png"
+  escorregando:
+  - "sprites/7.png"
+  pulando:
+  - "sprites/8.png"
+  subindo:
+  - "sprites/9.png"
+  - "sprites/10.png"
+  atingido:
+  - "sprites/11.png"
+  disparando_parado:
+  - "sprites/12.png"
+  disparando_andando:
+  - "sprites/13.png"
+  - "sprites/14.png"
+  - "sprites/15.png"
+  disparando_pulando:
+  - "sprites/16.png"
+  disparando_subindo:
+  - "sprites/17.png"

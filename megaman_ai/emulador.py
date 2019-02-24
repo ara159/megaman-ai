@@ -3,52 +3,52 @@ from time import sleep
 import subprocess, shlex
 from pynput.keyboard import Key, Controller
 
-# DEBUG: A thred ManterEmulador ficará ativa após o fechamento da
-#		thred Emulador no ``máximo`` o tempo do `delay`
 
 class Emulador(Thread):
-	def __init__(self, room, posicao_tela=(0,0), escala=2):
+	def __init__(self, room, posicao=(0,0), escala=2):
 		super(Emulador, self).__init__()
-		self.room = room
-		self.name = room.split("/")[-1].split(".")[0]
-		self.escala = escala
-		self.posicao = posicao_tela
+		self.room    = room
+		self.name    = room.split(".")[0].split("/")[-1]
+		self.escala  = escala
+		self.posicao = posicao
+		self.comando = shlex.split("nestopia -d -s %d %s" % (self.escala,self.room))
 
 	def run(self):
-		args = shlex.split("nestopia -s "+str(self.escala)+" "+self.room)
-		retorno = subprocess.run(args, stdout=subprocess.DEVNULL,
-									stderr=subprocess.DEVNULL) # Bloqueia a thread
+		retorno = subprocess.run(self.comando, 
+								 stdout=subprocess.DEVNULL,
+								 stderr=subprocess.DEVNULL)
 		if retorno.returncode != 0:
 			print("Não foi possivel iniciar o emulador")
 		else:
-			print("Emulador finalizado")
+			print("Fim Thread emulador")
 
 class ManterEmulador(Thread):
-	def __init__(self, th_emulador, delay):
+	def __init__(self, emulador, taxa=0.5):
 		super(ManterEmulador, self).__init__()
-		self.emulador = th_emulador
-		# foco
-		self.cmd_foco = shlex.split("wmctrl -a '"+th_emulador.getName()+"'")
-		# posicao
-		pos = str(th_emulador.posicao[0])+","+str(th_emulador.posicao[1])
-		self.cmd_posicao = shlex.split("wmctrl -r '"+th_emulador.getName()+"' -e 0,"+pos+",-1,-1")
-
-		self.delay = delay
+		self.emulador = emulador
+		self.taxa     = taxa
+		self.foco     = shlex.split("wmctrl -a \"%s\"" % self.emulador.name)
+		args_posicao  = (emulador.name, emulador.posicao[0], emulador.posicao[1])
+		self.posicao  = shlex.split("wmctrl -r \"%s\" -e 0,%d,%d,-1,-1" % args_posicao)
 
 	def run(self):
+		sleep(0.2)
 		while self.emulador.isAlive():
-			subprocess.run(self.cmd_foco)
-			subprocess.run(self.cmd_posicao)
-			sleep(self.delay)
+			subprocess.run(self.foco, stderr=subprocess.DEVNULL)
+			subprocess.run(self.posicao, stderr=subprocess.DEVNULL)
+			if self.taxa < 0:
+				break
+			sleep(self.taxa)
+		print("Fim Thread foco")
 
 class Controle(Controller):
-	pulo = "z"
-	disparo = "a"
+	pulo     = "z"
+	disparo  = "a"
 	esquerda = Key.left
-	direita = Key.right
-	cima = Key.up
-	baixo = Key.down
-	pause = Key.enter
+	direita  = Key.right
+	cima     = Key.up
+	baixo    = Key.down
+	pause    = Key.enter
 	carregar = Key.f7
 
 	pressionados = []
