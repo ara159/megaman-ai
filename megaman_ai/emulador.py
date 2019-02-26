@@ -32,7 +32,7 @@ class ManterEmulador(Thread):
 		self.posicao  = shlex.split("wmctrl -r \"%s\" -e 0,%d,%d,-1,-1" % args_posicao)
 
 	def run(self):
-		sleep(0.2)
+		sleep(1)
 		while self.emulador.isAlive():
 			subprocess.run(self.foco, stderr=subprocess.DEVNULL)
 			subprocess.run(self.posicao, stderr=subprocess.DEVNULL)

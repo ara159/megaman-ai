@@ -13,7 +13,6 @@ def quant_sprites(sprites):
 
 def capturar(cap, janela):
     image = numpy.array(cap.grab(janela))
-    image = cv2.resize(image, (256, 224))
     return image
 
 def iniciar(config, 

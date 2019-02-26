@@ -86,7 +86,8 @@ def main(params, config):
                 estats_temp= params.estats_temp)
     elif params.jogar:
         megaman_ai.jogar(
-                room      = "arquivos/MegaMan3.nes",  
+                room      = "arquivos/MegaMan3.nes",
+                config    = config,  
                 sequencia = params.sequencia, 
                 focar     = params.focar,
                 carregar  = params.carregar_estado)

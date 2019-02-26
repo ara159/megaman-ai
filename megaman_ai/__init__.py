@@ -1,6 +1,7 @@
 from megaman_ai import emulador, megaman3, coleta
 
 def jogar(room, 
+            config,
             sequencia  = [], 
             focar      = True, 
             foco_tx    = 0.3, 
@@ -10,7 +11,7 @@ def jogar(room,
     
     emu = emulador.Emulador(
             room    = room, 
-            posicao = (1,1), 
+            posicao = (config.video["left"],config.video["top"]), 
             escala  = escala)
 
     foco = emulador.ManterEmulador(
