@@ -33,19 +33,16 @@ def iniciar(config,
         
         imagemArray = capturar(capturador, config.video)
         imagemArray = visao.MegaMan.transformar(imagemArray)
-        melhor, _sprite = megaman.atualizar(imagemArray)
+        melhor      = megaman.atualizar(imagemArray)
 
-        print(melhor)
-        # if melhor <= 1:
-        #     print("Qualidade:"+str(int(melhor*100))+"%", end=", ")
-        #     print("Estado:", megaman.estado)
-        # else:
-        #     print("---")     
+        if melhor <= 1:
+            print("Qualidade:", str(melhor), end=", ")
+            print("Estado:", megaman.estado)
+        else:
+            print("---")
                
         if exibir:
             cv2.imshow("Coleta", imagemArray)
-            # if(len(_sprite)):
-            #      cv2.imshow("teste", _sprite)
             if (cv2.waitKey(1) & 0xFF) == ord("q"):
                 cv2.destroyAllWindows()
                 break

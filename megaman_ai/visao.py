@@ -31,10 +31,9 @@ class MegaMan:
                     self.sprites[estado]["mascaras"].append(imagem)
 
     def atualizar(self, imagem):
-        melhor  = 0
+        melhor  = 100
         estado  = None
         direcao = ""
-        spriteMelhor = []
 
         for _estado in self.sprites:
             todos = self.sprites[_estado]["sprites"]
@@ -50,25 +49,25 @@ class MegaMan:
                         _sprite = cv2.flip(_sprite, 1)
                         _mask   = cv2.flip(_mask, 1)
 
-                    encontrado  = cv2.matchTemplate(imagem, _sprite, cv2.TM_CCORR_NORMED, None, _mask)
+                    encontrado  = cv2.matchTemplate(imagem, _sprite, cv2.TM_SQDIFF, None, _mask)
                     status      = cv2.minMaxLoc(encontrado)
-                    
-                    if status[1] > melhor:
-                        melhor  = status[1]
+
+                    if status[0] < melhor:
+                        melhor  = status[0]
                         estado  = _estado
                         direcao = _direcao
-                        spriteMelhor = _sprite
+
         else:
             self.estado = (estado, direcao)
 
-        return melhor, spriteMelhor
+        return melhor
 
     @staticmethod
     def transformar(imagem):
         # TODO: Continuar calibrar a transforamação para
         #       resultados melhores
         imagem = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
-        # imagem = cv2.threshold(imagem, 70, 255, cv2.THRESH_BINARY)
+        imagem = cv2.threshold(imagem, 70, 255, cv2.THRESH_BINARY)[1]
         return imagem
 
     @staticmethod
