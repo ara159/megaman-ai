@@ -35,16 +35,17 @@ def iniciar(config,
         imagemArray = visao.MegaMan.transformar(imagemArray)
         melhor, _sprite = megaman.atualizar(imagemArray)
 
-        if melhor < 1:
-            print("Qualidade:"+str(int(100-(melhor*100)))+"%", end=", ")
-            print("Estado:", megaman.estado)
-        else:
-            print("---")     
+        print(melhor)
+        # if melhor <= 1:
+        #     print("Qualidade:"+str(int(melhor*100))+"%", end=", ")
+        #     print("Estado:", megaman.estado)
+        # else:
+        #     print("---")     
                
         if exibir:
             cv2.imshow("Coleta", imagemArray)
-            if(len(_sprite)):
-                 cv2.imshow("teste", _sprite)
+            # if(len(_sprite)):
+            #      cv2.imshow("teste", _sprite)
             if (cv2.waitKey(1) & 0xFF) == ord("q"):
                 cv2.destroyAllWindows()
                 break

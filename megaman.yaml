@@ -7,29 +7,66 @@ video:
 
 sprites:
   parado:
-  - "sprites/1.png"
-  - "sprites/2.png"
-  - "sprites/3.png"
+    sprites:
+    - "sprites/1.png"
+    - "sprites/2.png"
+    - "sprites/3.png"
+    mascaras:
+    - "sprites_mask/1_mask.png"
+    - "sprites_mask/2_mask.png"
+    - "sprites_mask/3_mask.png"
   andando:
-  - "sprites/4.png"
-  - "sprites/5.png"
-  - "sprites/6.png"
+    sprites:
+    - "sprites/4.png"
+    - "sprites/5.png"
+    - "sprites/6.png"
+    mascaras:
+    - "sprites_mask/4_mask.png"
+    - "sprites_mask/5_mask.png"
+    - "sprites_mask/6_mask.png"
   escorregando:
-  - "sprites/7.png"
+    sprites:
+    - "sprites/7.png"
+    mascaras:
+    - "sprites_mask/7_mask.png"
   pulando:
-  - "sprites/8.png"
+    sprites:
+    - "sprites/8.png"
+    mascaras:
+    - "sprites_mask/8_mask.png"
   subindo:
-  - "sprites/9.png"
-  - "sprites/10.png"
+    sprites:
+    - "sprites/9.png"
+    - "sprites/10.png"
+    mascaras:
+    - "sprites_mask/9_mask.png"
+    - "sprites_mask/10_mask.png"
   atingido:
-  - "sprites/11.png"
+    sprites:
+    - "sprites/11.png"
+    mascaras:
+    - "sprites_mask/11_mask.png"
   disparando_parado:
-  - "sprites/12.png"
+    sprites:
+    - "sprites/12.png"
+    mascaras:
+    - "sprites_mask/12_mask.png"
   disparando_andando:
-  - "sprites/13.png"
-  - "sprites/14.png"
-  - "sprites/15.png"
+    sprites:
+    - "sprites/13.png"
+    - "sprites/14.png"
+    - "sprites/15.png"
+    mascaras:
+    - "sprites_mask/13_mask.png"
+    - "sprites_mask/14_mask.png"
+    - "sprites_mask/15_mask.png"
   disparando_pulando:
-  - "sprites/16.png"
+    sprites:
+    - "sprites/16.png"
+    mascaras:
+    - "sprites_mask/16_mask.png"
   disparando_subindo:
-  - "sprites/17.png"
+    sprites:
+    - "sprites/17.png"
+    mascaras:
+    - "sprites_mask/17_mask.png"
