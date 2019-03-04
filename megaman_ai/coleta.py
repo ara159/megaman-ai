@@ -11,8 +11,8 @@ def quant_sprites(sprites):
         soma += len(sprites[estado])
     return soma * 2
 
-def capturar(cap, janela):
-    image = numpy.array(cap.grab(janela))
+def capturar(capturador, janela):
+    image = numpy.array(capturador.grab(janela))
     return image
 
 def iniciar(config, 
@@ -20,7 +20,7 @@ def iniciar(config,
             exibir     = False,
             estats_temp= False):
 
-    captura       = mss.mss()
+    capturador    = mss.mss()
     megaman       = visao.MegaMan(sprites=config.sprites)
     seg_frame     = 1/frames_seg
     tempo_passado = 0
@@ -31,10 +31,9 @@ def iniciar(config,
     while True:
         tempo_inicio = timeit.default_timer()
         
-        imagem = capturar(captura, config.video)
-        imagem = visao.MegaMan.transformar(imagem)
-
-        melhor = megaman.atualizar(imagem)
+        imagemArray = capturar(capturador, config.video)
+        imagemArray = visao.MegaMan.transformar(imagemArray)
+        melhor, _sprite = megaman.atualizar(imagemArray)
 
         if melhor < 1:
             print("Qualidade:"+str(int(100-(melhor*100)))+"%", end=", ")
@@ -43,7 +42,9 @@ def iniciar(config,
             print("---")     
                
         if exibir:
-            cv2.imshow("Coleta", imagem)
+            cv2.imshow("Coleta", imagemArray)
+            if(len(_sprite)):
+                 cv2.imshow("teste", _sprite)
             if (cv2.waitKey(1) & 0xFF) == ord("q"):
                 cv2.destroyAllWindows()
                 break

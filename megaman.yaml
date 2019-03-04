@@ -1,8 +1,9 @@
 video: 
   top: 197
   left: 245
-  width: 448
-  height: 404
+  height: 224
+  width: 256
+  
 
 sprites:
   parado:
