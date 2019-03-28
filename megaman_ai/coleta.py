@@ -3,7 +3,7 @@ import cv2
 import numpy
 import timeit
 import time
-from megaman_ai import visao
+from megaman_ai import visao, config
 
 def quant_sprites(sprites):
     soma = 0
@@ -15,43 +15,58 @@ def capturar(capturador, janela):
     image = numpy.array(capturador.grab(janela))
     return image
 
-def iniciar(config, 
-            frames_seg = 30,
+def iniciar(skip_to    = 0,
             exibir     = False,
             estats_temp= False):
 
-    capturador    = mss.mss()
-    megaman       = visao.MegaMan(sprites=config.sprites)
-    seg_frame     = 1/frames_seg
-    tempo_passado = 0
+    megaman   = visao.MegaMan(sprites=config.sprites)
+    cap       = cv2.VideoCapture("/home/rafael/megaman-ai/gameplay_no_damage.mp4")
+    
+    if not cap.set(cv2.CAP_PROP_POS_FRAMES, skip_to):
+        print("Não foi possível skipar o video para o frame %d" % skip_to)
+        return
 
-    print("FPS    : %d" % frames_seg)
-    print("Sprites: %d" % quant_sprites(config.sprites))
+    print("** Configurações de coleta **")
+    print("Frames por segundo Original: %d" % cap.get(cv2.CAP_PROP_FPS))
+    print("Frame inicial: %d" % skip_to)
+    print("Tempo inicial: %d" % (cap.get(cv2.CAP_PROP_POS_MSEC)/1000))
+    print("Altura do frame Original: %d" % cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    print("Largura do frame original: %d" % cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    print("Quantidade de sprites de personagem: %d" % quant_sprites(config.sprites))
+    print("")
 
-    while True:
-        tempo_inicio = timeit.default_timer()
+    ultimo_estado = None
+    ultimo_frame  = None
+    image_nome    = 0
+
+    while cap.isOpened():
+        # imprime informações sobre o tempo
+        if estats_temp:
+            print("Tempo : %fs" % (cap.get(cv2.CAP_PROP_POS_MSEC)/1000), end=" ")
+            print("Frame : %d" % int(cap.get(cv2.CAP_PROP_POS_FRAMES)))
+
+        frame     = cv2.resize(cap.read()[1], (256,240))
+        frame_pb  = visao.MegaMan.transformar(frame)
+        melhor    = megaman.atualizar(frame_pb)
         
-        imagemArray = capturar(capturador, config.video)
-        imagemArray = visao.MegaMan.transformar(imagemArray)
-        melhor      = megaman.atualizar(imagemArray)
+        if megaman.estado != ultimo_estado:
+            if ultimo_estado != None:
+                print("Transição:", ultimo_estado[0], megaman.estado[0])
+            ultimo_estado = megaman.estado
+            ultimo_frame  = frame
 
-        if melhor <= 1:
+        # # imprime informações sobre a qualidade
+        if melhor <= 20:
             print("Qualidade:", str(melhor), end=", ")
             print("Estado:", megaman.estado)
         else:
             print("---")
-               
+        
+        # imprime saida visual
         if exibir:
-            cv2.imshow("Coleta", imagemArray)
+            rframe = cv2.resize(frame, None, fx=2, fy=2)
+            megaman.desenhar_infos(rframe)
+            cv2.imshow("Megama-AI", rframe)
             if (cv2.waitKey(1) & 0xFF) == ord("q"):
                 cv2.destroyAllWindows()
                 break
-
-        tempo_passado = timeit.default_timer() - tempo_inicio
-        tempo_sobra   = seg_frame - tempo_passado
-        
-        if estats_temp:
-            print("Tempo de execução do frame: ", tempo_passado)
-        
-        if tempo_sobra > 0: 
-            time.sleep(tempo_sobra)

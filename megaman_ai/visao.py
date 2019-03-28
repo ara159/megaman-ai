@@ -8,6 +8,7 @@ class MegaMan:
     frame   = False
     estado  = None
     direcao = 0
+    posicao = None
     
     def __init__(self, sprites):
         for estado in sprites:
@@ -33,6 +34,7 @@ class MegaMan:
     def atualizar(self, imagem):
         melhor  = 100
         estado  = None
+        posicao = None
         direcao = ""
 
         for _estado in self.sprites:
@@ -56,16 +58,24 @@ class MegaMan:
                         melhor  = status[0]
                         estado  = _estado
                         direcao = _direcao
+                        posicao = status[2]
 
         else:
             self.estado = (estado, direcao)
+            self.posicao = posicao
 
         return melhor
+    
+    def desenhar_infos(self, frame):
+        try:
+            text = self.estado[0]+" "+self.estado[1]
+            cv2.rectangle(frame, (0,0), (frame.shape[1], 35), (0,0,0), -1)
+            cv2.putText(frame, text, (20,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
+        except:
+            pass
 
     @staticmethod
     def transformar(imagem):
-        # TODO: Continuar calibrar a transforamação para
-        #       resultados melhores
         imagem = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
         imagem = cv2.threshold(imagem, 70, 255, cv2.THRESH_BINARY)[1]
         return imagem

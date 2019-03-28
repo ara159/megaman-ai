@@ -1,7 +1,12 @@
-from megaman_ai import emulador, megaman3, coleta
+class Config:
+    # Classe de configuração
+    pass
+
+config = Config()
+
+from megaman_ai import emulador, coleta, megaman3
 
 def jogar(room, 
-            config,
             sequencia  = [], 
             focar      = True, 
             foco_tx    = 0.3, 

@@ -4,22 +4,20 @@ import sys
 import os
 import yaml
 
-opcoes = "hCTtcmves:f:"
-
-class Config: pass
+opcoes = "hCTtcmes:i:"
 
 class Params:
     jogar           = True
     coleta          = False
-    verboso         = False
     exibir_visao    = False
     arquivo_config  = ["~/.megaman_ai.yaml", "megaman.yaml"]
     carregar_estado = False
     focar           = False
     sequencia       = [1]
-    frames_seg      = 30
+    frames_seg      = 60
     estats_temp     = False
     ajuda           = False
+    skip_to         = 0
 
     def __init__(self, params, sobra):
         for param in params:
@@ -28,8 +26,6 @@ class Params:
             if "-C" in param[0]:
                 self.jogar  = False
                 self.coleta = True
-            if "-v" in param[0]:
-                self.verboso = True
             if "-e" in param[0]:
                 self.exibir_visao = True
             if "-a" in param[0]:
@@ -44,6 +40,8 @@ class Params:
                 self.frames_seg = int(param[1])
             if "-T" in param[0]:
                 self.estats_temp = True
+            if "-i" in param[0]:
+                self.skip_to = int(param[1])
         self.sobra = sobra
 
 def uso():
@@ -56,7 +54,6 @@ def uso():
     print("  treinar: python3 -m -megaman_ai -C")
     print("")
     print("Parâmetros gerais:")
-    print("  -v:    Modo verboso. Exibe informações sobre a execução.")
     print("  -a:    Arquivo de configuração.")
     print("  -h:    Exibe esta mensagem de ajuda.")
     print("")
@@ -70,24 +67,21 @@ def uso():
     print("Parâmetros modo coleta:")
     print("  -e:    Exibir saida da visão.")
     print("  -T:    Exibe estatísticas sobre o tempo dos frames.")
-    print("  -f:    (1 a 60) Numero de frames por sergundo a serem processados.")
-    print("         Caso omitido, o valor é de 30.")
+    print("  -i:    (0...) Skipa o video até um determinado frame.")
     print("")
     exit(3)
 
-def main(params, config):
+def main(params):
     if params.ajuda:
         uso()
     elif params.coleta:
         megaman_ai.coleta.iniciar(
-                config     = config, 
-                frames_seg = params.frames_seg,
+                skip_to    = params.skip_to,
                 exibir     = params.exibir_visao,
                 estats_temp= params.estats_temp)
     elif params.jogar:
         megaman_ai.jogar(
                 room      = "arquivos/MegaMan3.nes",
-                config    = config,  
                 sequencia = params.sequencia, 
                 focar     = params.focar,
                 carregar  = params.carregar_estado)
@@ -111,15 +105,14 @@ if __name__ == "__main__":
         exit(2)
     
     try:
-        config = Config()
-        config.__dict__ = yaml.load(arquivo)
+        megaman_ai.config.__dict__ = yaml.load(arquivo)
     except:
         print("Houve problemas com a leitura do aquivo de configuração.")
         print("Verifique a sintaxe yaml do arquivo.")
         exit(2)
 
     try:
-        main(params, config)
+        main(params)
     except KeyboardInterrupt:
         print("Execução interrompida pelo usuário")
         exit(0)
