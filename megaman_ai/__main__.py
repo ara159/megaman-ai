@@ -51,7 +51,7 @@ def uso():
     print("")
     print("Uso:")
     print("  jogar  : python3 -m megaman_ai")
-    print("  treinar: python3 -m -megaman_ai -C")
+    print("  treinar: python3 -m -megaman_ai -C <video 1> [<video 2> ...]")
     print("")
     print("Parâmetros gerais:")
     print("  -a:    Arquivo de configuração.")
@@ -76,6 +76,7 @@ def main(params):
         uso()
     elif params.coleta:
         megaman_ai.coleta.iniciar(
+                videos     = params.sobra,
                 skip_to    = params.skip_to,
                 exibir     = params.exibir_visao,
                 estats_temp= params.estats_temp)

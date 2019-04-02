@@ -31,7 +31,7 @@ class MegaMan:
                     imagem = cv2.imread(mascara, 0)
                     self.sprites[estado]["mascaras"].append(imagem)
 
-    def atualizar(self, imagem):
+    def atualizar(self, imagem, threashold):
         melhor  = 100
         estado  = None
         posicao = None
@@ -61,8 +61,12 @@ class MegaMan:
                         posicao = status[2]
 
         else:
-            self.estado = (estado, direcao)
-            self.posicao = posicao
+            if melhor <= threashold:
+                self.estado = [estado, direcao]
+                self.posicao = posicao
+            else:
+                self.estado = [None, None]
+                self.posicao = None
 
         return melhor
     
@@ -79,14 +83,3 @@ class MegaMan:
         imagem = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
         imagem = cv2.threshold(imagem, 70, 255, cv2.THRESH_BINARY)[1]
         return imagem
-
-    @staticmethod
-    def combinarFundo(imagem, sprite):
-        fundo = imagem[82:142, 98:158]
-        largura = len(sprite[0])
-        altura = len(sprite)
-        fundo[0:altura, 0:largura] = sprite
-        return fundo
-           
-
-    
