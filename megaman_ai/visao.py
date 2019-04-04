@@ -70,14 +70,23 @@ class MegaMan:
 
         return melhor
     
-    def desenhar_infos(self, frame):
+    def desenhar_infos(self, frame, progresso, qualidade):
         try:
-            text = self.estado[0]+" "+self.estado[1]
-            cv2.rectangle(frame, (0,0), (frame.shape[1], 35), (0,0,0), -1)
-            cv2.putText(frame, text, (20,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
-        except:
+            tl = (self.posicao[0], self.posicao[1])
+            br = (tl[0]+20, tl[1]+23)
+            cv2.rectangle(frame, tl, br, (255,255,255), 1)
+        except: 
             pass
-
+        frame = cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
+        estado = "Estado: "+str(self.estado[0])+"+"+str(self.estado[1])
+        qualidade = "Qualidade: "+str(100-qualidade)+"%"
+        progresso = "Progresso: "+str(progresso)+"%"
+        cv2.rectangle(frame, (70, 0), (390, 75), (0,0,0), -1)
+        cv2.putText(frame, estado, (80,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
+        cv2.putText(frame, qualidade, (80,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
+        cv2.putText(frame, progresso, (80,60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
+        cv2.imshow("Megama-AI - Estados", frame)
+        
     @staticmethod
     def transformar(imagem):
         imagem = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)

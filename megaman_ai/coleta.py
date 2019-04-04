@@ -117,11 +117,9 @@ def iniciar(videos, frame_inicial=0, exib_video=False, exib_tempo=False, exib_qu
                 
                 # imprime saida visual
                 if exib_video:
-                    e = cv2.resize(frame_c, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
-                    megaman.desenhar_infos(e)
-                    cv2.imshow("Megama-AI - Estados", e)
+                    megaman.desenhar_infos(frame_c, progresso, melhor)
                     if (cv2.waitKey(1) & 0xFF) == ord("q"):
-                        cv2.destroyAllWindows()
+                        print("Coleta finalizada pelo usuário.")
                         break
         
         # ser iterrompido pelo teclado
@@ -129,7 +127,6 @@ def iniciar(videos, frame_inicial=0, exib_video=False, exib_tempo=False, exib_qu
             dados.close()
             print("Coleta iterrompida pelo usuário.")
             return
-
-        # finalizado por exaustão
+        
+        cv2.destroyAllWindows()
         dados.close()
-        print("Coleta finalizada!")
