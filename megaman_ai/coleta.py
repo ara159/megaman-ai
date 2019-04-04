@@ -4,7 +4,7 @@ import yaml
 import os
 from megaman_ai import visao, config
 
-def iniciar(videos, skip_to=0, exibir=False, estats_temp=False):
+def iniciar(videos, frame_inicial=0, exib_video=False, exib_tempo=False, exib_qualidade=False):
     # cria um auxiliar para a visão computacional
     megaman   = visao.MegaMan(sprites=config.sprites)
     
@@ -38,27 +38,27 @@ def iniciar(videos, skip_to=0, exibir=False, estats_temp=False):
         if os.path.exists(dataset):
             arq = open(dataset, "r")
             yml = yaml.load(arq.read())
-            skip_to = list(yml.keys())[-1]+1
+            frame_inicial = list(yml.keys())[-1]+1
             print("** Continuando "+video_nome+"**")
         
         # inicia o leitor de video
         cap = cv2.VideoCapture(video)
         
         # verifica se o video já foi feito até o fim, se foi vai para o proximo video
-        if skip_to == cap.get(cv2.CAP_PROP_FRAME_COUNT):
-            print(video, " feito!")
+        if frame_inicial == cap.get(cv2.CAP_PROP_FRAME_COUNT):
+            print("%s já foi routulado completamente!" % video)
             continue
         
         # tenta eskipar o video para o ultimo frame, ou um recebido por param
-        if not cap.set(cv2.CAP_PROP_POS_FRAMES, skip_to):
-            print("Não foi possível skipar o video para o frame %d" % skip_to)
+        if not cap.set(cv2.CAP_PROP_POS_FRAMES, frame_inicial):
+            print("Não foi possível skipar o video para o frame %d" % frame_inicial)
             return
         
         # exibe algumas informações sobre o video e o procedimento
         print("** Video %s **" % video_nome)
         print("** Configurações de coleta **")
         print("Frames por segundo Original: %d" % cap.get(cv2.CAP_PROP_FPS))
-        print("Frame inicial: %d" % skip_to)
+        print("Frame inicial: %d" % frame_inicial)
         print("Tempo inicial: %d" % (cap.get(cv2.CAP_PROP_POS_MSEC)/1000))
         print("Altura do frame Original: %d" % cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         print("Largura do frame original: %d" % cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -79,7 +79,7 @@ def iniciar(videos, skip_to=0, exibir=False, estats_temp=False):
                 frame_num = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
 
                 # imprime informações sobre o tempo se solicitado
-                if (not frame_anter is None) and estats_temp:
+                if (not frame_anter is None) and exib_tempo:
                     print("Tempo : %fs" % (cap.get(cv2.CAP_PROP_POS_MSEC)/1000))
                     print("Frame : %d" % frame_num)
 
@@ -87,7 +87,8 @@ def iniciar(videos, skip_to=0, exibir=False, estats_temp=False):
                 try:
                     frame_c = cv2.resize(cap.read()[1], (256,240))
                 except:
-                    print("Fim de video. O arquivo contém informações de todos os frames.")
+                    print("Fim de video. Rotulação completa do video %s" % video)
+                    print("Pasta com os arquivos: %s" % tpasta)
                     break
 
                 # aplica as tranformações necessárias
@@ -107,14 +108,15 @@ def iniciar(videos, skip_to=0, exibir=False, estats_temp=False):
                 frame_anter = frame
 
                 # imprime informações de qualidade e estados para cada frame
-                print("Qualidade:", str(100-melhor)+"%")
-                print("Estado:", megaman.estado)
+                if exib_qualidade:
+                    print("Qualidade:", str(100-melhor)+"%")
+                    print("Estado:", megaman.estado)
                 
                 progresso = int((frame_num/frames_tot)*100)
                 print("Progresso: ["+"#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4))+"]", str(progresso)+"%")
                 
                 # imprime saida visual
-                if exibir:
+                if exib_video:
                     e = cv2.resize(frame_c, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
                     megaman.desenhar_infos(e)
                     cv2.imshow("Megama-AI - Estados", e)

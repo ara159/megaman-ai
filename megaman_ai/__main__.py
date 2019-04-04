@@ -4,44 +4,51 @@ import sys
 import os
 import yaml
 
-opcoes = "hCTtcmes:i:"
+opcoes = "Chqtcmes:i:"
 
 class Params:
-    jogar           = True
-    coleta          = False
-    exibir_visao    = False
+    # Parametros gerais
     arquivo_config  = ["~/.megaman_ai.yaml", "megaman.yaml"]
+    ajuda           = False
+    # Parametros para jogar
+    jogar           = True
     carregar_estado = False
     focar           = False
     sequencia       = [1]
-    frames_seg      = 60
-    estats_temp     = False
-    ajuda           = False
-    skip_to         = 0
+    # Parametros de treinamento
+    frame_inicial   = 0
+    coleta          = False
+    exib_tempo      = False
+    exib_video      = False
+    exib_qualidade  = False
 
     def __init__(self, params, sobra):
         for param in params:
+            # Parametros gerais
             if "-h" in param[0]:
                 self.ajuda = True
-            if "-C" in param[0]:
-                self.jogar  = False
-                self.coleta = True
-            if "-e" in param[0]:
-                self.exibir_visao = True
             if "-a" in param[0]:
                 self.arquivo_config.insert(0, param[1])
+            # Parametros jogar
             if "-m" in param[0]:
                 self.focar = True
             if "-c" in param[0]:
                 self.carregar_estado = True
             if "-s" in param[0]:
                 self.sequencia = param[1].split(",")
-            if "-f" in param[0]:
-                self.frames_seg = int(param[1])
-            if "-T" in param[0]:
-                self.estats_temp = True
+            # Parametros de coleta
+            if "-C" in param[0]:
+                self.jogar  = False
+                self.coleta = True
+            if "-e" in param[0]:
+                self.exib_video = True
+            if "-t" in param[0]:
+                self.exib_tempo = True
             if "-i" in param[0]:
-                self.skip_to = int(param[1])
+                self.frame_inicial = int(param[1])
+            if "-q" in param[0]:
+                self.exib_qualidade = True
+            
         self.sobra = sobra
 
 def uso():
@@ -66,7 +73,8 @@ def uso():
     print("")
     print("Parâmetros modo coleta:")
     print("  -e:    Exibir saida da visão.")
-    print("  -T:    Exibe estatísticas sobre o tempo dos frames.")
+    print("  -q:    Exibe informações sobre a qualidade de cada frame coletado")
+    print("  -t:    Exibe estatísticas sobre o tempo dos frames.")
     print("  -i:    (0...) Skipa o video até um determinado frame.")
     print("")
     exit(3)
@@ -76,10 +84,11 @@ def main(params):
         uso()
     elif params.coleta:
         megaman_ai.coleta.iniciar(
-                videos     = params.sobra,
-                skip_to    = params.skip_to,
-                exibir     = params.exibir_visao,
-                estats_temp= params.estats_temp)
+                videos        = params.sobra,
+                frame_inicial = params.frame_inicial,
+                exib_video    = params.exib_video,
+                exib_tempo    = params.exib_tempo,
+                exib_qualidade= params.exib_qualidade)
     elif params.jogar:
         megaman_ai.jogar(
                 room      = "arquivos/MegaMan3.nes",
