@@ -27,9 +27,9 @@ def iniciar(videos, frame_inicial=0, exib_video=False, exib_tempo=False, exib_qu
 
         # seta o caminho para os arquivos gerados
         video_nome = video.split("/")[-1][:-4]
-        tpasta = "treinamento/"+video_nome
+        tpasta = "/tmp/treinamento/"+video_nome
         dataset = tpasta+"/estados.yaml"
-
+    
         # verifica se precisa criar a pasta
         if not os.path.exists(tpasta):
             os.mkdir(tpasta)
@@ -95,13 +95,13 @@ def iniciar(videos, frame_inicial=0, exib_video=False, exib_tempo=False, exib_qu
                 frame = visao.MegaMan.transformar(frame_c)
                 # atualizar o estado do objeto megaman usando o frame
                 melhor = megaman.atualizar(frame, 20)
-                # armazena o numero do frame atual com o estado atual no dataset
-                dados.write(yaml.dump({frame_num: megaman.estado}, default_flow_style=False))
                 
                 # armazena o frame anterior com o numero do frame_atual.
                 # ou seja, na leitura, a imagem será do frame anterior, e o estado do frame atual
                 # já estará pronto para o treino do classificador
+                # armazena o numero do frame atual com o estado atual no dataset
                 if not frame_anter is None:
+                    dados.write(yaml.dump({frame_num: megaman.estado}, default_flow_style=False))
                     cv2.imwrite(tpasta+"/"+str(frame_num)+".jpg", frame_anter)
 
                 # atualiza o frame anterior
@@ -121,7 +121,7 @@ def iniciar(videos, frame_inicial=0, exib_video=False, exib_tempo=False, exib_qu
                     if (cv2.waitKey(1) & 0xFF) == ord("q"):
                         print("Coleta finalizada pelo usuário.")
                         break
-        
+
         # ser iterrompido pelo teclado
         except KeyboardInterrupt:
             dados.close()
