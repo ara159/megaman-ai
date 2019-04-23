@@ -91,7 +91,7 @@ def main(params):
                 exib_qualidade= params.exib_qualidade)
     elif params.jogar:
         megaman_ai.jogar(
-                room      = "arquivos/MegaMan3.nes",
+                room      = "MegaMan3.nes",
                 sequencia = params.sequencia, 
                 focar     = params.focar,
                 carregar  = params.carregar_estado)
