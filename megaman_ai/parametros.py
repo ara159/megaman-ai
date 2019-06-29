@@ -6,7 +6,7 @@ linha de comando.
 """
 
 from sys import argv
-from getopt import getopt
+from getopt import gnu_getopt
 
 class Parametros:
     """ 
@@ -23,7 +23,7 @@ class Parametros:
     ajuda = False
     carregar_pre = False
     manter = False
-    sequencia = list(range(1, 10))
+    sequencia = "1,2,3,4,5,6,7,8"
     qualidade = False
     tempo = False
     skip = 0
@@ -39,10 +39,12 @@ class Parametros:
             if "--" in parametro and len(valor) == 0:
                 setattr(self, parametro[2:], True)
             else:
-                self.__setattr__(parametro[2:], valor)
+                setattr(self, parametro[2:], valor)
         
         self.sequencia = list(map(int, self.sequencia.split(',')))
+
         # Configura os valores extras de parâmetro
+        self.videos = opts[1]
 
     @staticmethod
     def getopts():
@@ -71,7 +73,7 @@ def parse():
     # TODO: Verificar a necessidade de se ter parâmetros curtos
     opts_curta = ""
     opts_longa = Parametros.getopts()
-    args = ["--sequencia=1,2,3", "--exibir"]
-    opts = getopt(args, opts_curta, opts_longa)
+    args = argv[1:]
+    opts = gnu_getopt(args, opts_curta, opts_longa)
     parametros = Parametros(opts)
     return parametros
