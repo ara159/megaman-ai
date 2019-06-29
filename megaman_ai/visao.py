@@ -1,5 +1,4 @@
 import cv2
-import mss
 import numpy
 import os
 
@@ -22,7 +21,6 @@ class MegaMan:
                     "sprites": [],
                     "mascaras": []
                 }
-
                 for sprite in sprites[estado]["sprites"]:
                     imagem = cv2.imread(sprite, 1)
                     imagem = MegaMan.transformar(imagem)

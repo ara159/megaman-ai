@@ -1,3 +1,5 @@
+import getopt
+
 class Config:
     # Classe de configuração
     pass
@@ -5,6 +7,8 @@ class Config:
 config = Config()
 
 from megaman_ai import emulador, coleta, megaman3
+from server.rafael import *
+import threading
 
 def jogar(room, 
             sequencia  = [], 
@@ -14,30 +18,10 @@ def jogar(room,
             escala     = 1,
             exibir     = False):
     
-    emu = emulador.Emulador(
-            room    = room, 
-            posicao = (config.video["left"],config.video["top"]), 
-            escala  = escala)
-
-    foco = emulador.ManterEmulador(
-            emulador = emu,
-            taxa     = foco_tx)
-
-    megaman = megaman3.MegaMan3(emulador=emu)
-
-    if not focar:
-        foco.taxa = -1
-
+    emu = emulador.Emulador(room=room)
     emu.start()
-    foco.start()
-    
-    if carregar: 
-        megaman.carregar()
-        megaman.jogar(exibir=exibir)
-    else:
-        megaman.iniciar()
-        for fase in sequencia:
-            megaman.escolher_fase(fase)
-            megaman.jogar(exibir=exibir)
-    
+    print("Emulador iniciado")
+    conectar()
+    print("Conectado ao emulador")
     print("Fim Thread principal")
+    return emu

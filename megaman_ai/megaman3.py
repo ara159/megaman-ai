@@ -1,48 +1,66 @@
 from time import sleep
-import megaman_ai
+from server.python_server import *
+
+controle_nes = {
+    "start": 
+        {"A" : False, "B": False, "down": False, "right":False, "select":False, "start":True, "up":False, "left": False},
+    "select": 
+        {"A" : False, "B": False, "down": False, "right":False, "select":True, "start":False, "up":False, "left": False},
+    "esquerda": 
+        {"A" : False, "B": False, "down": False, "right":False, "select":False, "start":False, "up":False, "left": True},
+    "direita": 
+        {"A" : False, "B": False, "down": False, "right":True, "select":False, "start":False, "up":False, "left": False},
+    "cima": 
+        {"A" : False, "B": False, "down": False, "right":False, "select":False, "start":False, "up":True, "left": False},
+    "baixo": 
+        {"A" : False, "B": False, "down": True, "right":False, "select":False, "start":False, "up":False, "left": False},
+    "A": 
+        {"A" : True, "B": False, "down": False, "right":False, "select":False, "start":False, "up":False, "left": False},
+    "B": 
+        {"A" : False, "B": True, "down": False, "right":False, "select":False, "start":False, "up":False, "left": False},
+}
 
 class MegaMan3:
     def __init__(self, emulador):
         self.emulador = emulador
-        self.controle = megaman_ai.emulador.Controle(emulador)
 
     def iniciar(self):
         self._esperar(6)
-        self.controle.pausar()
+        joypad.write(1, controle_nes["start"])
         self._esperar(3)
 
     def carregar(self):
-        sleep(0.3)
-        self.controle._click(self.controle.carregar)
+        emu.savestateload()
 
     def escolher_fase(self, fase):
         if fase is 1:
-            self.controle.andar_esquerda(True)
-            self.controle.subir(True)
+            joypad.write(1, controle_nes["esquerda"])
+            time.sleep(0.01)
+            joypad.write(1, controle_nes["cima"])
         elif fase is 2:
-            self.controle.subir(True)
+            joypad.write(1, controle_nes["cima"])
         elif fase is 3:
-            self.controle.andar_direita(True)
-            self.controle.subir(True)
+            joypad.write(1, controle_nes["direita"])
+            time.sleep(0.01)
+            joypad.write(1, controle_nes["cima"])
         elif fase is 4:
-            self.controle.andar_esquerda(True)
+            joypad.write(1, controle_nes["esquerda"])
         elif fase is 5:
-            self.controle.andar_direita(True)
+            joypad.write(1, controle_nes["direita"])
         elif fase is 6:
-            self.controle.andar_esquerda(True)
-            self.controle.descer(True)
+            joypad.write(1, controle_nes["esquerda"])
+            time.sleep(0.01)
+            joypad.write(1, controle_nes["baixo"])
         elif fase is 7:
-            self.controle.descer(True)
+            joypad.write(1, controle_nes["baixo"])
         elif fase is 8:
-            self.controle.andar_direita(True)
-            self.controle.descer(True)
+            joypad.write(1, controle_nes["direita"])
+            time.sleep(0.01)
+            joypad.write(1, controle_nes["baixo"])
         else:
             print("Fase %i não existe!" % fase)
             return
-
-        self.controle.pular(True)
-        self.controle.soltar_controle()
-
+        joypad.write(1, controle_nes["A"])
         self._esperar(11)
 
     def _esperar(self, tempo):

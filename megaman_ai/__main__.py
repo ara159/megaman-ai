@@ -1,10 +1,10 @@
-import megaman_ai
 import getopt
+import megaman_ai
 import sys  
 import os
 import yaml
 
-opcoes = "Chqtcmes:i:"
+opcoes = "Chqtcmed:s:i:"
 
 class Params:
     # Parametros gerais
@@ -21,6 +21,7 @@ class Params:
     exib_tempo      = False
     exib_video      = False
     exib_qualidade  = False
+    pasta_dst       = ""
 
     def __init__(self, params, sobra):
         for param in params:
@@ -48,7 +49,8 @@ class Params:
                 self.frame_inicial = int(param[1])
             if "-q" in param[0]:
                 self.exib_qualidade = True
-            
+            if "-d" in param[0]:
+                self.pasta_dst = param[1]
         self.sobra = sobra
 
 def uso():
@@ -76,32 +78,38 @@ def uso():
     print("  -q:    Exibe informações sobre a qualidade de cada frame coletado")
     print("  -t:    Exibe estatísticas sobre o tempo dos frames.")
     print("  -i:    (0...) Skipa o video até um determinado frame.")
+    print("  -d:    Pasta de destino. Caso seja omitido, será a pasta atual.")
     print("")
     exit(3)
 
 def main(params):
-    if params.ajuda:
+    if params.ajuda: 
         uso()
-    elif params.coleta:
+    
+    if params.coleta:
         megaman_ai.coleta.iniciar(
-                videos        = params.sobra,
+                videos = params.sobra,
+                pasta_dest = params.pasta_dst,
                 frame_inicial = params.frame_inicial,
-                exib_video    = params.exib_video,
-                exib_tempo    = params.exib_tempo,
-                exib_qualidade= params.exib_qualidade)
+                exib_video = params.exib_video,
+                exib_tempo = params.exib_tempo,
+                exib_qualidade = params.exib_qualidade)
     elif params.jogar:
         megaman_ai.jogar(
-                room      = "MegaMan3.nes",
+                room = "MegaMan3.nes",
                 sequencia = params.sequencia, 
-                focar     = params.focar,
-                carregar  = params.carregar_estado)
+                focar = params.focar,
+                carregar = params.carregar_estado,
+                foco_tx = 0.3,   # TODO: Parametrizar
+                escala = 2,     # TODO: Parametrizar
+                exibir = False) # TODO: Parametrizar
 
-if __name__ == "__main__":
+def parseParametros():
     try:
         params,sobra = getopt.getopt(sys.argv[1:], opcoes)
         params       = Params(params, sobra)
-    except:
-        print("Argumentos inválidos!")
+    except Exception as erro:
+        print("Argumentos inválidos!", erro)
         uso()
 
     arquivo = None
@@ -113,16 +121,23 @@ if __name__ == "__main__":
     else:
         print("Não foi possível encontrar um arquivo de configuração.")
         exit(2)
-    
+
     try:
         megaman_ai.config.__dict__ = yaml.load(arquivo)
     except:
         print("Houve problemas com a leitura do aquivo de configuração.")
         print("Verifique a sintaxe yaml do arquivo.")
         exit(2)
+    
+    return params
 
+def executar(params):
     try:
         main(params)
     except KeyboardInterrupt:
         print("Execução interrompida pelo usuário")
         exit(0)
+
+if __name__ == "__main__":
+    params = parseParametros()
+    executar(params)

@@ -4,7 +4,7 @@ import yaml
 import os
 from megaman_ai import visao, config
 
-def iniciar(videos, frame_inicial=0, exib_video=False, exib_tempo=False, exib_qualidade=False):
+def iniciar(videos, pasta_dest="", frame_inicial=0, exib_video=False, exib_tempo=False, exib_qualidade=False):
     # cria um auxiliar para a visão computacional
     megaman   = visao.MegaMan(sprites=config.sprites)
     
@@ -27,7 +27,7 @@ def iniciar(videos, frame_inicial=0, exib_video=False, exib_tempo=False, exib_qu
 
         # seta o caminho para os arquivos gerados
         video_nome = video.split("/")[-1][:-4]
-        tpasta = "/tmp/treinamento/"+video_nome
+        tpasta = pasta_dest+video_nome
         dataset = tpasta+"/estados.yaml"
     
         # verifica se precisa criar a pasta
@@ -105,7 +105,7 @@ def iniciar(videos, frame_inicial=0, exib_video=False, exib_tempo=False, exib_qu
                     cv2.imwrite(tpasta+"/"+str(frame_num)+".jpg", frame_anter)
 
                 # atualiza o frame anterior
-                frame_anter = frame
+                frame_anter = frame_c
 
                 # imprime informações de qualidade e estados para cada frame
                 if exib_qualidade:
@@ -113,18 +113,20 @@ def iniciar(videos, frame_inicial=0, exib_video=False, exib_tempo=False, exib_qu
                     print("Estado:", megaman.estado)
                 
                 progresso = int((frame_num/frames_tot)*100)
-                print("Progresso: ["+"#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4))+"]", str(progresso)+"%")
+                print("\rProgresso: ["+"#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4))+"]", str(progresso)+"%\r", end="")
                 
                 # imprime saida visual
                 if exib_video:
                     megaman.desenhar_infos(frame_c, progresso, melhor)
                     if (cv2.waitKey(1) & 0xFF) == ord("q"):
+                        print("")
                         print("Coleta finalizada pelo usuário.")
                         break
 
         # ser iterrompido pelo teclado
         except KeyboardInterrupt:
             dados.close()
+            print("")
             print("Coleta iterrompida pelo usuário.")
             return
         
