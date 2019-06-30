@@ -6,14 +6,12 @@ linha de comando.
 """
 
 from sys import argv
+from os import path
 from getopt import gnu_getopt
 
 class Parametros:
-    """ 
-    Parâmetros
-    ==========
-    Armazena as opções recebidas pelo usuário via linha de comando
-    para a execução do programa.
+    """ Armazena as opções recebidas pelo usuário via linha 
+    de comando para a execução do programa.
     Os atributos já iniciam com os valores padrão.
     A lista de parâmetros é criada a partir dos atributos da classe.
     """
@@ -41,8 +39,9 @@ class Parametros:
             else:
                 setattr(self, parametro[2:], valor)
         
-        self.sequencia = list(map(int, self.sequencia.split(',')))
-
+        self.sequencia = set(map(int, self.sequencia.split(',')))
+        self.skip = int(self.skip)
+        
         # Configura os valores extras de parâmetro
         self.videos = opts[1]
 
@@ -67,6 +66,71 @@ class Parametros:
                 opts.append(attr+"=")
 
         return opts
+
+    def validarTreinamento(self):
+        """Executa a validação das informações recebidas
+        para o modo treinamento"""
+        
+        tudoOk = True
+
+        # Verifica se os videos foram passados
+        if len(self.videos) == 0:
+            print("Nenhum video passado para o treinamento.")
+            print("É necessário passar pelo menos 1 video.")
+            tudoOk = False
+
+        # Verifica se os videos passados existem
+        for video in self.videos:
+            if not path.isfile(video):
+                print("Video {} não encontrado.".format(video))
+                tudoOk = False
+
+        # Verifica se a pasta destino existe, vazio significa pasta atual
+        if len(self.destino) > 0 and not path.isdir(self.destino):
+            print("Pasta destino {} não exite.".format(self.destino))
+            tudoOk = False
+        
+        # Verifica validade do frame inicial
+        if self.skip < 0:
+            print("Valor inválido para o parâmetro skip ({})".format(self.skip))
+            tudoOk = False
+        
+        return tudoOk
+
+    def validarJogar(self):
+        """Executa a validação das informações recebidas
+        para o modo jogar"""
+
+        tudoOk = True
+
+        # Verifica se existe a room recebida
+        #// if not path.isfile(self.room):
+        #//    print("Não foi encontrado o arquivo {} do parâmetros room.".format(self.room))
+        #//     tudoOk = False
+
+        # Verifica tamanho da sequência
+        if not (len(self.sequencia) > 0 and len(self.sequencia) <= 8):
+            print("O tamanho da sequência é inválido. Tamanho correto é entre 1 e 8.")
+            tudoOk = False
+
+        # Verifica conteúdo da sequência
+        for k in self.sequencia:
+            if not k in range(1, 9): # Valor inconsistente
+                print("Valor {} em sequencia, fora do intervalo correto.".format(k), end="") 
+                print("Aceitos valores entre 1 e 8 sem repetição.")
+                tudoOk = False
+        
+        # Verifica valor de foco
+        #// if not (self.foco > 0 and self.foco <= 1):
+        #//     print("Valor de foco fora do intervalo aceito. Intervalo correto entre 0 e 1.")
+        #//     tudoOk = False
+
+        # Verifica valor de escala
+        #// if not self.escala in (1, 2, 3, 4):
+        #//     print("Valor não é aceito. Valores aceitos 1, 2, 3 ou 4.")
+        #//     tudoOk = False
+        
+        return tudoOk
 
 def parse():
     """Cria, preenche e retorna um objeto `Parametro`"""
