@@ -45,6 +45,41 @@ def uso():
     print("")
     exit(3)
 
+
+def treinamento(params):
+    """Verifica os parâmetros para treinamento e
+    inicia com as opções recebidas"""
+    
+    if not params.validarTreinamento():
+        exit(3)
+    
+    # TODO: Continuar daqui
+    # megaman_ai.coleta.iniciar(
+    #     videos = params.videos,
+    #     pasta_dest = params.destino,
+    #     frame_inicial = params.skip,
+    #     exib_video = params.exibir,
+    #     exib_tempo = params.tempo,
+    #     exib_qualidade = params.qualidade)
+
+
+def jogar(params):
+    """Verifica os parâmetros para jogar e
+    inicia com as opções recebidas"""
+
+    if not params.validarJogar():
+        exit(3)
+    
+    # TODO: Continuar daqui
+    # megaman_ai.jogar(
+    #     room = "MegaMan3.nes",
+    #     sequencia = params.sequencia, 
+    #     focar = params.manter,
+    #     carregar = params.carregar_pre,
+    #     foco_tx = 0.3, # TODO: Parametrizar
+    #     escala = 2, # TODO: Parametrizar
+    #     exibir = False) # TODO: Parametrizar
+
 if __name__ == "__main__":
     # Recebe parâmetros via linha de comando
     try:
@@ -57,23 +92,10 @@ if __name__ == "__main__":
     if params.ajuda: 
         uso() # exit
     
-    # # Modo treinameto
-    # if params.coleta:
-    #     megaman_ai.coleta.iniciar(
-    #         videos = params.sobra,
-    #         pasta_dest = params.pasta_dst,
-    #         frame_inicial = params.frame_inicial,
-    #         exib_video = params.exib_video,
-    #         exib_tempo = params.exib_tempo,
-    #         exib_qualidade = params.exib_qualidade)
+    # Modo treinameto
+    if params.treinamento:
+        treinamento(params)
     
-    # # Modo jogar
-    # elif params.jogar:
-    #     megaman_ai.jogar(
-    #         room = "MegaMan3.nes",
-    #         sequencia = params.sequencia, 
-    #         focar = params.focar,
-    #         carregar = params.carregar_estado,
-    #         foco_tx = 0.3,   # TODO: Parametrizar
-    #         escala = 2,     # TODO: Parametrizar
-    #         exibir = False) # TODO: Parametrizar
+    # Modo jogar
+    else:
+        jogar(params)
