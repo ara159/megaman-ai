@@ -1,5 +1,6 @@
 import megaman_ai
 
+# TODO: Acrecentar intrução de como entrar no modo jogar
 def uso():
     print("Megaman AI")
     print("")
@@ -18,10 +19,13 @@ def uso():
     print("       Executa no modo treinamento.")
     print("       Quando neste modo, é necessário se passar os videos")
     print("       que serão usados no treinamento.")
-    print("  --config=<caminho>:")
-    print("       Arquivo de configuração.")
     print("")
     print("Opções modo Treinamento:")
+    print("  --sprites=<caminho>:")
+    print("       Arquivo yaml com as informações de sprites.")
+    print("  --historico=<caminho>:")
+    print("       Onde o arquivo de histórico será criado e consultado.")
+    print("       Por padrão ficará em '~/.megaman_ai/historico.yaml'")
     print("  --exibir:")
     print("       Exibir saida da visão com estátisticas sobre o treinamento.")
     print("  --qualidade:")
@@ -53,14 +57,17 @@ def treinamento(params):
     if not params.validarTreinamento():
         exit(3)
     
-    # TODO: Continuar daqui
-    # megaman_ai.coleta.iniciar(
-    #     videos = params.videos,
-    #     pasta_dest = params.destino,
-    #     frame_inicial = params.skip,
-    #     exib_video = params.exibir,
-    #     exib_tempo = params.tempo,
-    #     exib_qualidade = params.qualidade)
+    treino = megaman_ai.treinamento.Treinamento(
+        videos=params.videos,
+        sprites=params.sprites,
+        destino=params.destino,
+        skip=params.skip,
+        exibir=params.exibir,
+        tempo=params.tempo,
+        qualidade=params.qualidade,
+        historico=params.historico)
+    
+    treino.iniciar()
 
 
 def jogar(params):
@@ -70,9 +77,8 @@ def jogar(params):
     if not params.validarJogar():
         exit(3)
     
-    # TODO: Continuar daqui
     # megaman_ai.jogar(
-    #     room = "MegaMan3.nes",
+    #     room = "MegaMan3.nes", # TODO: Parametrizar
     #     sequencia = params.sequencia, 
     #     focar = params.manter,
     #     carregar = params.carregar_pre,
