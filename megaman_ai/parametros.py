@@ -6,8 +6,9 @@ linha de comando.
 """
 
 from sys import argv
-from os import path
+from os import path, mkdir
 from getopt import gnu_getopt
+import yaml
 
 class Parametros:
     """ Armazena as opções recebidas pelo usuário via linha 
@@ -17,7 +18,7 @@ class Parametros:
     """
     treinamento = False
     exibir = False
-    config = ""
+    sprites = "megaman.yaml"
     ajuda = False
     carregar_pre = False
     manter = False
@@ -26,6 +27,7 @@ class Parametros:
     tempo = False
     skip = 0
     destino = ""
+    historico = ""
 
     def __init__(self, opts):
         self.parse(opts)
@@ -71,7 +73,34 @@ class Parametros:
         """Executa a validação das informações recebidas
         para o modo treinamento"""
         
+        # TODO: Verificar se os videos passados são do formato aceito
+
         tudoOk = True
+
+        # Verifica existência do arquivo de sprites
+        if not path.isfile(self.sprites):
+            print("Arquivo sprites {} não existe.".format(self.sprites))
+        
+        # Verifica se o arquivo de histórico existe
+        if len(self.historico) > 0:
+            if not path.isfile(self.historico):
+                print("Criando arquivo de historico {}".format(arquivo))
+                open(self.historico, 'w').close()
+        else:
+            pasta = path.expanduser("~")+"/.megaman_ai"
+            arquivo = pasta+"/historico.yaml"
+            if not path.isdir(pasta):
+                path.os.mkdir(pasta)
+            if not path.isfile(arquivo):
+                open(arquivo, 'w').close()
+            self.historico = arquivo
+
+        # Abre o arquivo sprites como yaml
+        try:
+            self.sprites = yaml.load(open(self.sprites).read())
+        except:
+            print("Não foi possível abrir o arquivo {} como yaml.".format(self.sprites), end="")
+            print("Verifique se a sintaxe está correta.")
 
         # Verifica se os videos foram passados
         if len(self.videos) == 0:
