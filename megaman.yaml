@@ -1,64 +1,40 @@
-parado:
-  sprites:
-  - "sprites/1.png"
-  - "sprites/2.png"
-  - "sprites/3.png"
-  mascaras:
-  - "sprites_mask/1_mask.png"
-  - "sprites_mask/2_mask.png"
-  - "sprites_mask/3_mask.png"
-andando:
-  sprites:
-  - "sprites/4.png"
-  - "sprites/5.png"
-  - "sprites/6.png"
-  mascaras:
-  - "sprites_mask/4_mask.png"
-  - "sprites_mask/5_mask.png"
-  - "sprites_mask/6_mask.png"
-escorregando:
-  sprites:
-  - "sprites/7.png"
-  mascaras:
-  - "sprites_mask/7_mask.png"
-pulando:
-  sprites:
-  - "sprites/8.png"
-  mascaras:
-  - "sprites_mask/8_mask.png"
-subindo:
-  sprites:
-  - "sprites/9.png"
-  - "sprites/10.png"
-  mascaras:
-  - "sprites_mask/9_mask.png"
-  - "sprites_mask/10_mask.png"
-atingido:
-  sprites:
-  - "sprites/11.png"
-  mascaras:
-  - "sprites_mask/11_mask.png"
-disparando_parado:
-  sprites:
-  - "sprites/12.png"
-  mascaras:
-  - "sprites_mask/12_mask.png"
-disparando_andando:
-  sprites:
-  - "sprites/13.png"
-  - "sprites/14.png"
-  - "sprites/15.png"
-  mascaras:
-  - "sprites_mask/13_mask.png"
-  - "sprites_mask/14_mask.png"
-  - "sprites_mask/15_mask.png"
-disparando_pulando:
-  sprites:
-  - "sprites/16.png"
-  mascaras:
-  - "sprites_mask/16_mask.png"
-disparando_subindo:
-  sprites:
-  - "sprites/17.png"
-  mascaras:
-  - "sprites_mask/17_mask.png"
+# Pasta contendo os sprites
+sprites: "sprites"
+
+# Pasta contendo as máscaras para os sprites
+# As mascaras devem ter o mesmo nome dos sprites
+mascaras: "sprites/mascaras"
+
+# extenção
+extencao: "png"
+
+# estados possiveis dos sprites no formato
+# estado -> [sprite1, sprite2, sprite3, spriteN]
+estados:
+  parado:
+  - "1"
+  - "2"
+  - "3"
+  andando:
+  - "4"
+  - "5"
+  - "6"
+  escorregando:
+  - "7"
+  pulando:
+  - "8"
+  subindo:
+  - "9"
+  - "10"
+  atingido:
+  - "11"
+  disparando_parado:
+  - "12"
+  disparando_andando:
+  - "13"
+  - "14"
+  - "15"
+  disparando_pulando:
+  - "16"
+  disparando_subindo:
+  - "17"
