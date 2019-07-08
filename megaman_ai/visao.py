@@ -11,25 +11,23 @@ class MegaMan:
     sobra   = 20
     
     def __init__(self, sprites):
-        for estado in sprites:
-            for imagem in (sprites[estado]["sprites"]+sprites[estado]["mascaras"]):
-                if not os.path.isfile(imagem):
-                    print("O arquivo %s não pode ser como sprite," % imagem, end="")
-                    print("ele não existe. Ignorando.")
-            else:
-                self.sprites[estado] = {
-                    "sprites": [],
-                    "mascaras": []
-                }
-                for sprite in sprites[estado]["sprites"]:
-                    imagem = cv2.imread(sprite, 1)
-                    imagem = MegaMan.transformar(imagem)
-                    self.sprites[estado]["sprites"].append(imagem)
+        pastaSprite = sprites["sprites"]
+        pastaMascara = sprites["mascaras"]
+        extencao = sprites["extencao"]
+        estados = sprites["estados"]
 
-                for mascara in sprites[estado]["mascaras"]:
-                    imagem = cv2.imread(mascara, 0)
-                    self.sprites[estado]["mascaras"].append(imagem)
-        self.rotulos = [estado for estado in self.sprites]
+        # abre os sprites e máscaras
+        for estado in estados:
+            novoEstado = {"sprites": [], "mascaras": []}
+            for arquivo in estados[estado]:
+                sprite = cv2.imread("{}/{}.{}".format(pastaSprite, arquivo, extencao), 1)
+                novoEstado["sprites"].append(MegaMan.transformar(sprite))
+                mascara = cv2.imread("{}/{}.{}".format(pastaMascara, arquivo, extencao), 0)
+                novoEstado["mascaras"].append(mascara)
+            self.sprites[estado] = novoEstado
+        
+        # rótulos
+        self.rotulos = self.sprites.keys()
 
     def janela(self, imagem):
         if self.posicao != None:
