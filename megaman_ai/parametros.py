@@ -77,11 +77,7 @@ class Parametros:
 
         tudoOk = True
 
-        # Verifica existência do arquivo de sprites
-        if not path.isfile(self.sprites):
-            print("Arquivo sprites {} não existe.".format(self.sprites))
-        
-        # Verifica se o arquivo de histórico existe
+        # Verifica se o arquivo de histórico existe, se não existir, cria
         if len(self.historico) > 0:
             if not path.isfile(self.historico):
                 print("Criando arquivo de historico {}".format(arquivo))
@@ -95,12 +91,35 @@ class Parametros:
                 open(arquivo, 'w').close()
             self.historico = arquivo
 
+        # Verifica existência do arquivo de sprites
+        if not path.isfile(self.sprites):
+            print("Arquivo sprites {} não existe.".format(self.sprites))
+            tudoOk = False
+
         # Abre o arquivo sprites como yaml
         try:
             self.sprites = yaml.load(open(self.sprites).read())
         except:
             print("Não foi possível abrir o arquivo {} como yaml.".format(self.sprites), end="")
             print("Verifique se a sintaxe está correta.")
+            tudoOk = False
+        
+        # verifica se os caminhos dos sprites estão corretos
+        pastaSprites = self.sprites["sprites"]
+        pastaMascaras = self.sprites["mascaras"]
+        extencao = self.sprites["extencao"]
+
+        for pasta in [pastaSprites, pastaMascaras]:
+            if path.isdir(pasta):
+                for estado in self.sprites["estados"]:
+                    for sprite in self.sprites["estados"][estado]:
+                        arquivo = pasta+"/"+sprite+"."+extencao
+                        if not path.isfile(arquivo):
+                            print("O arquivo '{}' de sprite não existe.".format(arquivo))
+                            tudoOk = False
+            else:
+                print("Pasta '{}' não existe.".format(pasta))
+                tudoOk = False
 
         # Verifica se os videos foram passados
         if len(self.videos) == 0:
