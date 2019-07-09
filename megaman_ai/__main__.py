@@ -1,24 +1,27 @@
 import megaman_ai
 
-# TODO: Acrecentar intrução de como entrar no modo jogar
 def uso():
     print("Megaman AI")
     print("")
     print("Trabalho de TCC - Rafael Costa e Robson Santos")
     print("")
     print("O objetivo do projeto é criar uma inteligência artificial")
-    print("capaz de jogar pelo menos uma fase de MegaMan3.")
+    print("  capaz de jogar pelo menos uma fase de MegaMan3.")
+    print("")
+    print("O programa se divide em duas partes: Treinamento e Jogo.")
+    print("No Treinamento é onde será lido os videos para treinar a rede e")
+    print("  no modo Jogo é onde o conhecimento da rede será usado para jogar.")
     print("")
     print("Uso:")
-    print("  python3 -m megaman_ai [opções]")
+    print("  Para entrar no modo JOGAR:")
+    print("     python3 -m megaman_ai [opções]")
+    print("")
+    print("  Para entrar no modo TREINAMENTO:")
+    print("     python3 -m megaman_ai --treinamento <videos> [opções]")
     print("")
     print("Opções Gerais:")
     print("  --ajuda:")
     print("       Exibe esta mensagem de ajuda.")
-    print("  --treinamento <videos>:")
-    print("       Executa no modo treinamento.")
-    print("       Quando neste modo, é necessário se passar os videos")
-    print("       que serão usados no treinamento.")
     print("")
     print("Opções modo Treinamento:")
     print("  --sprites=<caminho>:")
@@ -40,12 +43,18 @@ def uso():
     print("       Pasta de destino. Caso seja omitido, será a pasta atual.")
     print("")
     print("Opções modo Jogar:")
-    print("  --manter:")
-    print("       Mantém a tela do game focada durante a execução.")
+    print("  --room=<arquivo room>:")
+    print("       Arquivo de room do jogo. Padrão: ./MegaMan3.nes")
     print("  --sequencia=<sequencia>:")
-    print("         (1,2,3,...8) Sequência de fases a ser seguida.")
-    print("         Números separados por vírgula. Caso seja omitido, será")
-    print("         sequencial de 1 a 8.")
+    print("       (1,2,3,...8) Sequência de fases a ser seguida.")
+    print("       Números separados por vírgula. Caso seja omitido, será")
+    print("       sequencial de 1 a 8.")
+    print("  --carregar-pre:")
+    print("       Carrega um estado pré carregado do emulador. Padrão: False")
+    print("  --fceux=<caminho>:")
+    print("       Caminho para o executavél do emulador fceux. Padrão: /usr/games/fceux")
+    print("  --fceux_script=<caminho>:")
+    print("       Caminho para o script lua 'servidor'. Padrão: ./server.lua")
     print("")
     exit(3)
 
@@ -77,14 +86,14 @@ def jogar(params):
     if not params.validarJogar():
         exit(3)
     
-    # megaman_ai.jogar(
-    #     room = "MegaMan3.nes", # TODO: Parametrizar
-    #     sequencia = params.sequencia, 
-    #     focar = params.manter,
-    #     carregar = params.carregar_pre,
-    #     foco_tx = 0.3, # TODO: Parametrizar
-    #     escala = 2, # TODO: Parametrizar
-    #     exibir = False) # TODO: Parametrizar
+    jogo = megaman_ai.jogo.Jogo(
+        room = params.room,
+        sequencia = params.sequencia, 
+        carregar_pre = params.carregar_pre,
+        fceux=params.fceux,
+        fceux_script=params.fceux_script)
+    
+    jogo.iniciar()
 
 if __name__ == "__main__":
     # Recebe parâmetros via linha de comando

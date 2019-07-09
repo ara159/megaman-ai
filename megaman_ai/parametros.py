@@ -6,9 +6,10 @@ linha de comando.
 """
 
 from sys import argv
-from os import path, mkdir
+from os import path, mkdir, getuid
 from getopt import gnu_getopt
 import yaml
+import socket
 
 class Parametros:
     """ Armazena as opções recebidas pelo usuário via linha 
@@ -21,13 +22,15 @@ class Parametros:
     sprites = "megaman.yaml"
     ajuda = False
     carregar_pre = False
-    manter = False
     sequencia = "1,2,3,4,5,6,7,8"
     qualidade = False
     tempo = False
     skip = 0
     destino = ""
     historico = ""
+    room = "MegaMan3.nes"
+    fceux = "/usr/games/fceux"
+    fceux_script = "server.lua"
 
     def __init__(self, opts):
         self.parse(opts)
@@ -150,12 +153,38 @@ class Parametros:
         para o modo jogar"""
 
         tudoOk = True
+        
+        # TODO: Verificar se o fceux está instalado
+
+        # Testa se está executando com permissões
+        if getuid() != 0:
+            print("É necessário executar como administrador.")
+            tudoOk = False
+        
+        # testa se a porta 4321 está disponível
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.bind(("127.0.0.1", 4321))
+            sock.close()
+        except OSError:
+            print("Porta 4321 está ocupada.")
+            tudoOk = False
 
         # Verifica se existe a room recebida
-        #// if not path.isfile(self.room):
-        #//    print("Não foi encontrado o arquivo {} do parâmetros room.".format(self.room))
-        #//     tudoOk = False
+        if not path.isfile(self.room):
+            print("Não foi encontrado o arquivo {} do parâmetros room.".format(self.room))
+            tudoOk = False
+        
+        # Verifica se existe a room recebida
+        if not path.isfile(self.fceux):
+            print("Não foi encontrado o executavél do fceux.".format(self.room))
+            tudoOk = False
 
+        # Verifica se existe o arquivo script do fceux
+        if not path.isfile(self.fceux_script):
+            print("Não foi o arquivo de script do fceux (servidor).".format(self.room))
+            tudoOk = False
+        
         # Verifica tamanho da sequência
         if not (len(self.sequencia) > 0 and len(self.sequencia) <= 8):
             print("O tamanho da sequência é inválido. Tamanho correto é entre 1 e 8.")
@@ -167,16 +196,6 @@ class Parametros:
                 print("Valor {} em sequencia, fora do intervalo correto.".format(k), end="") 
                 print("Aceitos valores entre 1 e 8 sem repetição.")
                 tudoOk = False
-        
-        # Verifica valor de foco
-        #// if not (self.foco > 0 and self.foco <= 1):
-        #//     print("Valor de foco fora do intervalo aceito. Intervalo correto entre 0 e 1.")
-        #//     tudoOk = False
-
-        # Verifica valor de escala
-        #// if not self.escala in (1, 2, 3, 4):
-        #//     print("Valor não é aceito. Valores aceitos 1, 2, 3 ou 4.")
-        #//     tudoOk = False
         
         return tudoOk
 
