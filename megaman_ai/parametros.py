@@ -25,7 +25,6 @@ class Parametros:
     sequencia = "1,2,3,4,5,6,7,8"
     qualidade = False
     tempo = False
-    skip = 0
     destino = ""
     historico = ""
     room = "MegaMan3.nes"
@@ -45,7 +44,6 @@ class Parametros:
                 setattr(self, parametro[2:], valor)
         
         self.sequencia = set(map(int, self.sequencia.split(',')))
-        self.skip = int(self.skip)
         
         # Configura os valores extras de parâmetro
         self.videos = opts[1]
@@ -139,11 +137,6 @@ class Parametros:
         # Verifica se a pasta destino existe, vazio significa pasta atual
         if len(self.destino) > 0 and not path.isdir(self.destino):
             print("Pasta destino {} não exite.".format(self.destino))
-            tudoOk = False
-        
-        # Verifica validade do frame inicial
-        if self.skip < 0:
-            print("Valor inválido para o parâmetro skip ({})".format(self.skip))
             tudoOk = False
         
         return tudoOk

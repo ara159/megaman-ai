@@ -2,7 +2,6 @@
 treinamento.py
 Classes de execução do treinamento da rede neural a partir dos videos.
 """
-# TODO: Remover parâmetro skip
 # TODO: Upar no GIT
 
 import cv2
@@ -18,10 +17,9 @@ class Treinamento:
     incluindo estatísticas sobre o andamento do treinamento."""
 
     def __init__(self, videos, sprites, historico=None, destino="", 
-                skip=0, exibir=False, tempo=False, qualidade=False):
+            exibir=False, tempo=False, qualidade=False):
         self.videos = videos
         self.destino = destino
-        self.skip = skip
         self.tempo = tempo
         self.exibir = exibir
         self.qualidade = qualidade

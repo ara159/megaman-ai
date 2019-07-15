@@ -37,8 +37,6 @@ def uso():
     print("       Carrega um estado pré carregado no emulador.")
     print("  --tempo:")
     print("       Exibe estatísticas sobre o tempo dos frames.")
-    print("  --skip=<frame_num>:")
-    print("       Skipa o video até um determinado frame.")
     print("  --destino=<caminho>:")
     print("       Pasta de destino. Caso seja omitido, será a pasta atual.")
     print("")
@@ -70,7 +68,6 @@ def treinamento(params):
         videos=params.videos,
         sprites=params.sprites,
         destino=params.destino,
-        skip=params.skip,
         exibir=params.exibir,
         tempo=params.tempo,
         qualidade=params.qualidade,
