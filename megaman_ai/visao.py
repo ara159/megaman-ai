@@ -4,11 +4,13 @@ import os
 
 class MegaMan:
     sprites = {}
+    classes = []
     frame   = False
     estado  = None
     direcao = 0
     posicao = None
     sobra   = 20
+    rotulo  = -1
     
     def __init__(self, sprites):
         pastaSprite = sprites["sprites"]
@@ -27,7 +29,9 @@ class MegaMan:
             self.sprites[estado] = novoEstado
         
         # rótulos
-        self.rotulos = self.sprites.keys()
+        for classe in self.sprites.keys():
+            self.classes.append(classe+'-l')
+            self.classes.append(classe+'-r')
 
     def janela(self, imagem):
         if self.posicao != None:
@@ -56,8 +60,8 @@ class MegaMan:
                 _sprite = self.sprites[_estado]["sprites"][i]
                 _mask   = self.sprites[_estado]["mascaras"][i]
             
-                for _direcao in ["direita", "esquerda"]:
-                    if _direcao == "esquerda":
+                for _direcao in ['r', 'l']:
+                    if _direcao == 'l':
 
                         _sprite = cv2.flip(_sprite, 1)
                         _mask   = cv2.flip(_mask, 1)
@@ -72,13 +76,15 @@ class MegaMan:
                         posicao = status[2]
         else:
             if melhor <= threashold:
-                self.estado = [estado, direcao]
+                self.estado = estado+"-"+direcao
+                self.rotulo = self.classes.index(self.estado)
                 if self.posicao == None:
                     self.posicao = posicao
                 else:
                     self.posicao = (self.posicao[0]-self.sobra+posicao[0], self.posicao[1]-self.sobra+posicao[1]) 
             else:
-                self.estado = [None, None]
+                self.estado = None
+                self.rotulo = -1
                 self.posicao = None
         return melhor
     
@@ -89,16 +95,22 @@ class MegaMan:
             cv2.rectangle(frame, tl, br, (255,255,255), 1)
         except: 
             pass
+        if self.estado == None:
+            estado = "Estado: nenhum (Rotulo: Nenhum)"
+        else:
+            estado_ = self.estado
+            if len(self.estado) > 6:
+                estado_ = self.estado[:2]+self.estado[-4:]
+            estado = "Estado: {} (Rotulo: {})".format(estado_, self.rotulo)
         frame = cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
-        estado = "Estado: "+str(self.estado[0])+"+"+str(self.estado[1])
-        qualidade = "Qualidade: "+str(100-qualidade)+"%"
-        progresso = "Progresso: "+str(progresso)+"%"
+        qualidade = "Qualidade: {}%".format(100-qualidade)
+        progresso = "Progresso: {}%".format(progresso)
         cv2.rectangle(frame, (70, 0), (390, 75), (0,0,0), -1)
         cv2.putText(frame, estado, (80,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
         cv2.putText(frame, qualidade, (80,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
         cv2.putText(frame, progresso, (80,60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
-        cv2.imshow("Megama-AI - Estados", frame)
-        
+        cv2.imshow("Treinamento", frame)
+
     @staticmethod
     def transformar(imagem):
         imagem = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
