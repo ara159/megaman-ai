@@ -2,7 +2,9 @@
 treinamento.py
 Classes de execução do treinamento da rede neural a partir dos videos.
 """
-# TODO: Upar no GIT
+
+# * Treinando frame a frame
+# TODO: A contagem das estatísticas estão erradas. Consertar.
 
 import cv2
 import numpy
@@ -11,6 +13,7 @@ import os
 import megaman_ai
 import timeit
 
+from megaman_ai import inteligencia
 
 class Treinamento:
     """Armazena informações sobre uma instancia de treinamento
@@ -60,9 +63,13 @@ class Treinamento:
 
             # Após o treinamento com o video, atualiza o histórico
             self._atualizarHistorico(video, videoCapture)
+            
+            # Salva modelo
+            inteligencia.salvar()
 
     def _exibirInfosFimTreinamento(self, video):
         """Exibe algumas informações antes do treinamento com o video"""
+        inteligencia.modelo.summary()
         print("Fim de treinamento com o video {}.".format(video))
 
     def _exibirInfosInicioTreinamento(self, video):
@@ -137,7 +144,7 @@ class Treinamento:
 
         # Lê o video até o fim
         while videoCapture.isOpened() and self.estatisticas.progresso != 100:
-            
+
             # Obtém o frame do video e aplica tranformações iniciais
             frameBruto = videoCapture.read()[1]
             frameRedimencionado = cv2.resize(frameBruto, self.dimensaoTela)
@@ -147,10 +154,13 @@ class Treinamento:
             # atualizar o estado do objeto megaman usando o frame
             qualidade = self.visao.atualizar(frameTratado, 20)
             
-            if not self.frameAnterior is None:
-                # TODO: Função de treinamento da rede neural ou estratégias de treinamento aqui
-                pass
-            
+            # treina a rede com o frame anterior e o rótulo do frame atual
+            if not self.frameAnterior is None and self.visao.rotulo != -1:
+                inteligencia.modelo.fit(
+                    numpy.array([self.frameAnterior]) / 255.0, 
+                    numpy.array([self.visao.rotulo]),
+                    batch_size=1)
+
             # atualiza o frame anterior
             self.frameAnterior = frameTratado
 

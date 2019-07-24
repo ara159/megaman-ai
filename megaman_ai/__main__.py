@@ -22,6 +22,8 @@ def uso():
     print("Opções Gerais:")
     print("  --ajuda:")
     print("       Exibe esta mensagem de ajuda.")
+    print("  --inteligencia=<caminho>:")
+    print("       Caminho para o arquivo que ficará gravada a inteligência.")
     print("")
     print("Opções modo Treinamento:")
     print("  --sprites=<caminho>:")
@@ -63,6 +65,9 @@ def treinamento(params):
     
     if not params.validarTreinamento():
         exit(3)
+    
+    # carrega a inteligência
+    megaman_ai.inteligencia.carregar(params.inteligencia, len(params.sprites['estados']))
     
     treino = megaman_ai.treinamento.Treinamento(
         videos=params.videos,

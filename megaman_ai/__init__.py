@@ -1,1 +1,1 @@
-from . import parametros, treinamento, visao, jogo
+from . import parametros, inteligencia, treinamento, visao, jogo
