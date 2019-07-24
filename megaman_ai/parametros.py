@@ -30,6 +30,7 @@ class Parametros:
     room = "MegaMan3.nes"
     fceux = "/usr/games/fceux"
     fceux_script = "server.lua"
+    inteligencia = "inteligencia.h5"
 
     def __init__(self, opts):
         self.parse(opts)
@@ -189,6 +190,13 @@ class Parametros:
                 print("Valor {} em sequencia, fora do intervalo correto.".format(k), end="") 
                 print("Aceitos valores entre 1 e 8 sem repetição.")
                 tudoOk = False
+        
+        # Testa se já existe um modelo de inteligencia
+        if not path.isfile(self.inteligencia):
+            print("Arquivo de inteligencia {} não existe. ".format(self.inteligencia) +
+                    "Lembre-se que é preciso treinar antes de jogar. "+
+                    "Use o parâmetro help para mais informações")
+            tudoOk = False
         
         return tudoOk
 
