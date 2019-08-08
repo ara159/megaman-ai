@@ -6,14 +6,22 @@ import socket
 import json
 import os
 import cv2
+import numpy
+import yaml
+
+from megaman_ai import inteligencia, visao
 
 # TODO: Usar um "whereis" para encontrar o caminho do executável do emulador
-
+# TODO: É obrigatório passar o arquivo com os sprites para modo jogar
+# TODO: Implemetar tradução de indice de predict para ação
 
 class Jogo:
 
-    def __init__(self, room, fceux="/usr/games/fceux", fceux_script="server.lua", sequencia=None, carregar_pre=False):
+    def __init__(self, room, sprites, fceux="/usr/games/fceux", 
+            fceux_script="server.lua", sequencia=None, carregar_pre=False):
         self.room = room
+        self.classes = self._getClasses(sprites)
+        self.comandos = self._getComandos(sprites)
         self.sequencia = sequencia
         self.carregar_pre = carregar_pre
         self.fceux = fceux
@@ -22,6 +30,7 @@ class Jogo:
         self._conexao = None
         self._conectado = False
         self._caminhoFrame = "/tmp/.megamanAI.screen"
+        self.repeticoesA = 0
 
     def iniciar(self):
         # inicia o emulador
@@ -44,29 +53,41 @@ class Jogo:
         try:
             # Recebe uma mensagem de 'pode ler a tela'
             self._conexao.recv(4096)
-
-            # Tenta ler a tela em 5 tentativas,
-            # se não conseguir retorna None
+            
+            # entra em loop tentando ler o arquivo de frame
             frame = None
-            tentativas = 5
-
-            while frame is None and tentativas:
+            while frame is None:
                 frame = cv2.imread(self._caminhoFrame)
-                tentativas -= 1
-
-            # TODO: Logging DEBUG
             return frame
 
         except ConnectionResetError:
             print("-- Conexão fechada pelo servidor.")
             self._conectado = False
-            return
 
     def _jogar(self):
-        # TODO: Implementar
-        # Lógica de jogo aqui
-        pass
-
+        """ Joga o game"""
+        
+        # pega o ultimo frame do emulador
+        frame = self.obterFrame()
+        # trata a imagem
+        frame = cv2.resize(frame, (256, 240))
+        frameTratado = visao.MegaMan.transformar(frame)
+        # passa para a IA para prever o proximo movimento
+        acao = inteligencia.modelo.predict(numpy.array([frameTratado]), use_multiprocessing=True)
+        classe = numpy.argmax(acao[0])
+        # pega o comando que o personagem precisa executar
+        comando = self.comandos[classe].copy()
+        # trata o problema do 'A' pressionado infinitamente
+        if "A" in comando:
+            self.repeticoesA += 1    
+            if self.repeticoesA > 20:
+                del comando["A"]
+                self.repeticoesA = 0
+        else:
+            self.repeticoesA = 0
+        # envia o comando para o emulador
+        self._enviarComando(comando)
+    
     def _iniciarEmulador(self):
         """Inicia a thread do emulador com os parâmetros passados"""
 
@@ -78,7 +99,9 @@ class Jogo:
 
         # executa, essa chamada trava a thread até o fim da execução
         processo = subprocess.run(
-            comando, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            comando,
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL)
 
         # verifica o código de saída do comando
         if processo.returncode == 0:
@@ -90,7 +113,7 @@ class Jogo:
         """Se conecta ao emulador"""
         try:
             # Espera um tempinho para dar tempo de começar a executar o servidor
-            time.sleep(2)
+            time.sleep(5)
             # tenta se conectar
             self._conexao = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._conexao.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -108,3 +131,31 @@ class Jogo:
         except BrokenPipeError:
             print("-- Conexão fechada pelo servidor.")
             self._conectado = False
+
+    def _getClasses(self, sprites):
+        classes = []
+        for s in list(yaml.load(open(sprites, "r").read())['estados'].keys()):
+            classes.append(s+"-l")
+            classes.append(s+"-r")
+        return classes
+    
+    def _getComandos(self, sprites):
+        sprites = yaml.load(open(sprites, "r").read())
+        comandos = []
+
+        for estado in sprites['estados']:
+            comando = sprites['estados'][estado]['comando']
+
+            if comando is None:
+                comandos.append({})
+                comandos.append({})
+                continue
+            
+            comandos.append(dict().fromkeys(comando, True))
+            
+            if 'left' in comando:
+                comando[comando.index('left')] = 'right'
+                comandos.append(dict().fromkeys(comando, True))
+            else:
+                comandos.append(dict().fromkeys(comando, True))
+        return comandos

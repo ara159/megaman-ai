@@ -12,29 +12,72 @@ extencao: "png"
 # estado -> [sprite1, sprite2, sprite3, spriteN]
 estados:
   parado:
-  - "1"
-  - "2"
-  - "3"
+    sprites:
+      - "1"
+      - "2"
+      - "3"
+    comando:
+
   andando:
-  - "4"
-  - "5"
-  - "6"
+    sprites:
+      - "4"
+      - "5"
+      - "6"
+    comando:
+      - left
+  
   escorregando:
-  - "7"
+    sprites:
+      - "7"
+    comando:
+      - left
+      - down
+      - A
+  
   pulando:
-  - "8"
+    sprites:
+      - "8"
+    comando:
+      - left
+      - A
+      
   subindo:
-  - "9"
-  - "10"
+    sprites:
+      - "9"
+      - "10"
+    comando:
+      - up
+
   atingido:
-  - "11"
+    sprites:
+      - "11"
+    comando:
+
   disparando_parado:
-  - "12"
+    sprites:
+      - "12"
+    comando:
+      - B
+
   disparando_andando:
-  - "13"
-  - "14"
-  - "15"
+    sprites:
+      - "13"
+      - "14"
+      - "15"
+    comando:
+      - left
+      - B
+
   disparando_pulando:
-  - "16"
+    sprites:
+      - "16"
+    comando:
+      - left
+      - A
+      - B
+  
   disparando_subindo:
-  - "17"
+    sprites:
+      - "17"
+    comando:
+      - B

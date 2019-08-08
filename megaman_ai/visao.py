@@ -21,7 +21,7 @@ class MegaMan:
         # abre os sprites e máscaras
         for estado in estados:
             novoEstado = {"sprites": [], "mascaras": []}
-            for arquivo in estados[estado]:
+            for arquivo in estados[estado]['sprites']:
                 sprite = cv2.imread("{}/{}.{}".format(pastaSprite, arquivo, extencao), 1)
                 novoEstado["sprites"].append(MegaMan.transformar(sprite))
                 mascara = cv2.imread("{}/{}.{}".format(pastaMascara, arquivo, extencao), 0)

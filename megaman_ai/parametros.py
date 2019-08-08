@@ -114,7 +114,7 @@ class Parametros:
         for pasta in [pastaSprites, pastaMascaras]:
             if path.isdir(pasta):
                 for estado in self.sprites["estados"]:
-                    for sprite in self.sprites["estados"][estado]:
+                    for sprite in self.sprites["estados"][estado]['sprites']:
                         arquivo = pasta+"/"+sprite+"."+extencao
                         if not path.isfile(arquivo):
                             print("O arquivo '{}' de sprite não existe.".format(arquivo))

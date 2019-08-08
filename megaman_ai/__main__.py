@@ -88,8 +88,12 @@ def jogar(params):
     if not params.validarJogar():
         exit(3)
     
+    # carrega a inteligência
+    megaman_ai.inteligencia.carregar(params.inteligencia, None)
+
     jogo = megaman_ai.jogo.Jogo(
         room = params.room,
+        sprites = params.sprites,
         sequencia = params.sequencia, 
         carregar_pre = params.carregar_pre,
         fceux=params.fceux,

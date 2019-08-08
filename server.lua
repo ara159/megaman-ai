@@ -16,7 +16,7 @@ end
 print("Lua: Aguardando conexão...")
 
 client = sock:accept()
-client:settimeout(0)
+client:settimeout(1)
 
 print("Lua: Cliente conectado")
 
