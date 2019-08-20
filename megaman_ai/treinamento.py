@@ -29,7 +29,7 @@ class Treinamento:
         self.visao = megaman_ai.visao.MegaMan(sprites)
         self.dimensaoTela = (256, 240)
         self.estatisticas = Estatisticas()
-        self.frameAnterior = None
+        self.frameAnterior = None, -1
         self.usarHistorico = not historico is None
         self.arquivoHistorico = historico
         self.historico = None
@@ -155,14 +155,17 @@ class Treinamento:
             qualidade = self.visao.atualizar(frameTratado, 20)
             
             # treina a rede com o frame anterior e o rótulo do frame atual
-            if not self.frameAnterior is None and self.visao.rotulo != -1:
+            # apenas nas transições
+            if not self.frameAnterior[0] is None \
+                and self.frameAnterior[1] != self.visao.rotulo \
+                and self.visao.rotulo != -1:
                 inteligencia.modelo.fit(
-                    numpy.array([self.frameAnterior]) / 255.0, 
+                    numpy.array([self.frameAnterior[0]]) / 255.0, 
                     numpy.array([self.visao.rotulo]),
                     batch_size=1)
 
             # atualiza o frame anterior
-            self.frameAnterior = frameTratado
+            self.frameAnterior = frameTratado, self.visao.rotulo
 
             # Atualiza as estatísticas com os novos dados
             self.estatisticas.atualizar(videoCapture, 100-qualidade)
