@@ -27,7 +27,7 @@ def carregar(caminho, num_classes):
         modelo.compile(
                 optimizer='adam',
                 loss='sparse_categorical_crossentropy',
-                metrics=['accuracy'])
+                metrics=['accuracy'], verbose=0)
 
 def salvar():
     """Salva o modelo carregado atualmente em aquivo"""

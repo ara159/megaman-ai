@@ -33,6 +33,7 @@ class Treinamento:
         self.usarHistorico = not historico is None
         self.arquivoHistorico = historico
         self.historico = None
+        self.batch_size = 256
         self._obterHistorico()
 
     def iniciar(self):
@@ -122,53 +123,68 @@ class Treinamento:
 
     def _atualizarHistorico(self, videoNome, videoCapture):
         """Atualiza o arquivo de histórico com os dados mais recentes do video"""
+        #! disabilitado para debugar
         # Verifica se é para usar o histórico
-        if not self.usarHistorico:
-            return
+        # if not self.usarHistorico:
+        #     return
         
-        # Se o historico atual for None (normalmente a primeira execução)
-        if self.historico is None:
+        # # Se o historico atual for None (normalmente a primeira execução)
+        # if self.historico is None:
 
-            # Inicializa um dict
-            self.historico = {}
+        #     # Inicializa um dict
+        #     self.historico = {}
         
-        # Seta a chave como sendo o caminho do video e o valor sendo as estatisticas
-        self.historico[videoNome] = self.estatisticas
+        # # Seta a chave como sendo o caminho do video e o valor sendo as estatisticas
+        # self.historico[videoNome] = self.estatisticas
 
-        # Atualiza as informações
-        arquivo = open(self.arquivoHistorico, 'w')
-        arquivo.write(yaml.dump(self.historico))
+        # # Atualiza as informações
+        # arquivo = open(self.arquivoHistorico, 'w')
+        # arquivo.write(yaml.dump(self.historico))
 
     def _treinar(self, videoCapture):
         """Executa o treinamento em um video"""
+        
+        s = [],[]
 
         # Lê o video até o fim
-        while videoCapture.isOpened() and self.estatisticas.progresso != 100:
-
+        while videoCapture.isOpened():
             # Obtém o frame do video e aplica tranformações iniciais
             frameBruto = videoCapture.read()[1]
-            frameRedimencionado = cv2.resize(frameBruto, self.dimensaoTela)
-            frameTratado = megaman_ai.visao.MegaMan.transformar(
-            frameRedimencionado)
-            
-            # atualizar o estado do objeto megaman usando o frame
-            qualidade = self.visao.atualizar(frameTratado, 20)
-            
-            # treina a rede com o frame anterior e o rótulo do frame atual
-            # apenas nas transições
-            if not self.frameAnterior[0] is None \
-                and self.frameAnterior[1] != self.visao.rotulo \
-                and self.visao.rotulo != -1:
+            fimVideo = frameBruto is None
+
+            if not fimVideo:
+                frameRedimencionado = cv2.resize(frameBruto, self.dimensaoTela)
+                frameTratado = megaman_ai.visao.MegaMan.transformar(frameRedimencionado)
+                
+                # atualizar o estado do objeto megaman usando o frame
+                qualidade = self.visao.atualizar(frameTratado, 20)
+                
+                # treina a rede com o frame anterior e o rótulo do frame atual
+                # apenas nas transições
+                if not self.frameAnterior[0] is None and \
+                    self.frameAnterior[1] != self.visao.rotulo and \
+                    self.visao.rotulo != -1:
+                    s[0].append(self.frameAnterior[0])
+                    s[1].append(self.visao.rotulo)
+                
+                # atualiza o frame anterior
+                self.frameAnterior = frameTratado,self.visao.rotulo
+                
+            if len(s[0]) == self.batch_size or fimVideo: # ou fim do video
                 inteligencia.modelo.fit(
-                    numpy.array([self.frameAnterior[0]]) / 255.0, 
-                    numpy.array([self.visao.rotulo]),
-                    batch_size=1)
+                    numpy.array(s[0])/255.0, 
+                    numpy.array(s[1]),
+                    batch_size=self.batch_size,
+                    epochs=5)
+                # limpa o batch
+                s[0].clear()
+                s[1].clear()
 
-            # atualiza o frame anterior
-            self.frameAnterior = frameTratado, self.visao.rotulo
-
-            # Atualiza as estatísticas com os novos dados
-            self.estatisticas.atualizar(videoCapture, 100-qualidade)
+                # Atualiza as estatísticas com os novos dados
+                # TODO: A qualidade deve ser atualizada a cada frame que pega, 
+                # neste momento está sendo calculado errado
+                # talvez retirar essa estatística seja uma opção
+                self.estatisticas.atualizar(videoCapture, 0) 
 
             # Exibe informações do treinamento no console
             self._exibirInfoTreinamento()
@@ -177,7 +193,7 @@ class Treinamento:
             self._exibirVisaoTreinamento(frameTratado)
 
             # Quando a tecla 'q' é pressionada interrompe o treinamento
-            if (cv2.waitKey(1) & 0xFF) == ord('q'):
+            if (cv2.waitKey(1) & 0xFF) == ord('q') or fimVideo:
                 break
 
     def _exibirInfoTreinamento(self):
@@ -186,16 +202,16 @@ class Treinamento:
         # Progresso
         progresso = self.estatisticas.progresso
         print("Progresso: ["+"#"*int(progresso/4)+">"+"." *
-              (int(100/4)-int(progresso/4))+"]", str(progresso)+"%")
-
-        # Estatísticas
-        if self.tempo:
-            print("Tempo médio por frame:", self.estatisticas.tempoMedioFrame)
-
-        # Qualidade
-        if self.qualidade:
-            print("Qualidade do último frame: {}, média: {}".format(
-                self.estatisticas.qualidadeAtual, self.estatisticas.qualidadeMedia))
+              (int(100/4)-int(progresso/4))+"]", str(progresso)+"%\r", end="")
+        #* Retirado
+        # # Estatísticas
+        # if self.tempo:
+        #     print("Tempo médio por frame:", self.estatisticas.tempoMedioFrame)
+        #* Retirado
+        # # Qualidade
+        # if self.qualidade:
+        #     print("Qualidade do último frame: {}, média: {}".format(
+        #         self.estatisticas.qualidadeAtual, self.estatisticas.qualidadeMedia))
 
     def _exibirVisaoTreinamento(self, frame):
         """Mostra a visão do treinamento"""
@@ -208,7 +224,7 @@ class Treinamento:
 
 class Estatisticas:
     """Armazena as informações sobre o desempenho do treinamento"""
-    framesTotal = 0
+    framesTotal = None
     frameAtual = 0
     progresso = 0
     qualidadeAtual = 0
