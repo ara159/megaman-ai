@@ -33,7 +33,9 @@ class Treinamento:
         self.usarHistorico = not historico is None
         self.arquivoHistorico = historico
         self.historico = None
-        self.batch_size = 256
+        self.epochs = 50
+        self.batch_size = 100
+        self.s = [],[]
         self._obterHistorico()
 
     def iniciar(self):
@@ -144,7 +146,7 @@ class Treinamento:
     def _treinar(self, videoCapture):
         """Executa o treinamento em um video"""
         
-        s = [],[]
+        self.s = [],[]
 
         # Lê o video até o fim
         while videoCapture.isOpened():
@@ -164,27 +166,27 @@ class Treinamento:
                 if not self.frameAnterior[0] is None and \
                     self.frameAnterior[1] != self.visao.rotulo and \
                     self.visao.rotulo != -1:
-                    s[0].append(self.frameAnterior[0])
-                    s[1].append(self.visao.rotulo)
+                    self.s[0].append(self.frameAnterior[0])
+                    self.s[1].append(self.visao.rotulo)
                 
                 # atualiza o frame anterior
                 self.frameAnterior = frameTratado,self.visao.rotulo
                 
-            if len(s[0]) == self.batch_size or fimVideo: # ou fim do video
+            if len(self.s[0]) == self.batch_size or fimVideo: # ou fim do video
                 inteligencia.modelo.fit(
-                    numpy.array(s[0])/255.0, 
-                    numpy.array(s[1]),
+                    numpy.array(self.s[0])/255.0, 
+                    numpy.array(self.s[1]),
                     batch_size=self.batch_size,
-                    epochs=5)
+                    epochs=self.epochs)
                 # limpa o batch
-                s[0].clear()
-                s[1].clear()
+                self.s[0].clear()
+                self.s[1].clear()
 
-                # Atualiza as estatísticas com os novos dados
-                # TODO: A qualidade deve ser atualizada a cada frame que pega, 
-                # neste momento está sendo calculado errado
-                # talvez retirar essa estatística seja uma opção
-                self.estatisticas.atualizar(videoCapture, 0) 
+            # Atualiza as estatísticas com os novos dados
+            # TODO: A qualidade deve ser atualizada a cada frame que pega, 
+            # neste momento está sendo calculado errado
+            # talvez retirar essa estatística seja uma opção
+            self.estatisticas.atualizar(videoCapture, 0) 
 
             # Exibe informações do treinamento no console
             self._exibirInfoTreinamento()
@@ -201,17 +203,11 @@ class Treinamento:
 
         # Progresso
         progresso = self.estatisticas.progresso
-        print("Progresso: ["+"#"*int(progresso/4)+">"+"." *
-              (int(100/4)-int(progresso/4))+"]", str(progresso)+"%\r", end="")
-        #* Retirado
-        # # Estatísticas
-        # if self.tempo:
-        #     print("Tempo médio por frame:", self.estatisticas.tempoMedioFrame)
-        #* Retirado
-        # # Qualidade
-        # if self.qualidade:
-        #     print("Qualidade do último frame: {}, média: {}".format(
-        #         self.estatisticas.qualidadeAtual, self.estatisticas.qualidadeMedia))
+        print("Progresso: [{}] {}% {}\r".format(
+                "#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4)),
+                progresso,
+                "{}/{}".format(len(self.s[0]), self.batch_size)),
+            end="")
 
     def _exibirVisaoTreinamento(self, frame):
         """Mostra a visão do treinamento"""

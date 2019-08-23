@@ -21,8 +21,8 @@ client:settimeout(1)
 print("Lua: Cliente conectado")
 
 -- Carrega a fase
--- ss = savestate.create(1)
--- savestate.load(ss)
+ss = savestate.create(1)
+savestate.load(ss)
 
 proximo = true
 ultima_acao = {}
