@@ -19,23 +19,18 @@ class Treinamento:
     """Armazena informações sobre uma instancia de treinamento
     incluindo estatísticas sobre o andamento do treinamento."""
 
-    def __init__(self, videos, sprites, historico=None, destino="", 
-            exibir=False, tempo=False, qualidade=False):
+    def __init__(self, videos, sprites, **kwargs):
         self.videos = videos
-        self.destino = destino
-        self.tempo = tempo
-        self.exibir = exibir
-        self.qualidade = qualidade
         self.visao = megaman_ai.visao.MegaMan(sprites)
-        self.dimensaoTela = (256, 240)
+        self.destino = kwargs.get("destino", "")
+        self.tempo = kwargs.get("tempo", False)
+        self.exibir = kwargs.get("exibir", False)
+        self.qualidade = kwargs.get("qualidade", False)
+        self.epochs = kwargs.get("epochs", 50)
+        self.batch_size = kwargs.get("batch_size", 100)
         self.estatisticas = Estatisticas()
-        self.frameAnterior = None, -1
-        self.usarHistorico = not historico is None
-        self.arquivoHistorico = historico
-        self.historico = None
-        self.epochs = 50
-        self.batch_size = 100
-        self.s = [],[]
+        self._frameAnterior = None, -1
+        self._s = [],[]
         self._obterHistorico()
 
     def iniciar(self):
@@ -146,7 +141,7 @@ class Treinamento:
     def _treinar(self, videoCapture):
         """Executa o treinamento em um video"""
         
-        self.s = [],[]
+        self._s = [],[]
 
         # Lê o video até o fim
         while videoCapture.isOpened():
@@ -155,7 +150,7 @@ class Treinamento:
             fimVideo = frameBruto is None
 
             if not fimVideo:
-                frameRedimencionado = cv2.resize(frameBruto, self.dimensaoTela)
+                frameRedimencionado = cv2.resize(frameBruto, (256, 240))
                 frameTratado = megaman_ai.visao.MegaMan.transformar(frameRedimencionado)
                 
                 # atualizar o estado do objeto megaman usando o frame
@@ -163,24 +158,24 @@ class Treinamento:
                 
                 # treina a rede com o frame anterior e o rótulo do frame atual
                 # apenas nas transições
-                if not self.frameAnterior[0] is None and \
-                    self.frameAnterior[1] != self.visao.rotulo and \
+                if not self._frameAnterior[0] is None and \
+                    self._frameAnterior[1] != self.visao.rotulo and \
                     self.visao.rotulo != -1:
-                    self.s[0].append(self.frameAnterior[0])
-                    self.s[1].append(self.visao.rotulo)
+                    self._s[0].append(self._frameAnterior[0])
+                    self._s[1].append(self.visao.rotulo)
                 
                 # atualiza o frame anterior
-                self.frameAnterior = frameTratado,self.visao.rotulo
+                self._frameAnterior = frameTratado,self.visao.rotulo
                 
-            if len(self.s[0]) == self.batch_size or fimVideo: # ou fim do video
+            if len(self._s[0]) == self.batch_size or fimVideo: # ou fim do video
                 inteligencia.modelo.fit(
-                    numpy.array(self.s[0])/255.0, 
-                    numpy.array(self.s[1]),
+                    numpy.array(self._s[0])/255.0, 
+                    numpy.array(self._s[1]),
                     batch_size=self.batch_size,
                     epochs=self.epochs)
                 # limpa o batch
-                self.s[0].clear()
-                self.s[1].clear()
+                self._s[0].clear()
+                self._s[1].clear()
 
             # Atualiza as estatísticas com os novos dados
             # TODO: A qualidade deve ser atualizada a cada frame que pega, 
@@ -206,7 +201,7 @@ class Treinamento:
         print("Progresso: [{}] {}% {}\r".format(
                 "#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4)),
                 progresso,
-                "{}/{}".format(len(self.s[0]), self.batch_size)),
+                "{}/{}".format(len(self._s[0]), self.batch_size)),
             end="")
 
     def _exibirVisaoTreinamento(self, frame):

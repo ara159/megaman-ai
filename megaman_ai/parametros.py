@@ -31,6 +31,8 @@ class Parametros:
     fceux = "/usr/games/fceux"
     fceux_script = "server.lua"
     inteligencia = "inteligencia.h5"
+    epochs = 50
+    batch_size = 300
 
     def __init__(self, opts):
         self.parse(opts)
@@ -139,7 +141,7 @@ class Parametros:
         if len(self.destino) > 0 and not path.isdir(self.destino):
             print("Pasta destino {} não exite.".format(self.destino))
             tudoOk = False
-        
+
         return tudoOk
 
     def validarJogar(self):

@@ -46,6 +46,10 @@ def uso():
     print("       Exibe estatísticas sobre o tempo dos frames.")
     print("  --destino=<caminho>:")
     print("       Pasta de destino. Caso seja omitido, será a pasta atual.")
+    print("  --epochs=<int>:")
+    print("       Número de épocas para cada batch. Padrão: 50")
+    print("  --batch_size=<int>:")
+    print("       Quantidade de frames por batch. Padrão: 300")
     print("")
     print("Opções modo Jogar:")
     print("  --room=<arquivo room>:")
@@ -77,6 +81,8 @@ def treinamento(params):
     treino = megaman_ai.treinamento.Treinamento(
         videos=params.videos,
         sprites=params.sprites,
+        epochs=params.epochs,
+        batch_size=params.batch_size,
         destino=params.destino,
         exibir=params.exibir,
         tempo=params.tempo,
