@@ -1,4 +1,9 @@
 import megaman_ai
+from tensorflow.python.util import deprecation
+
+# disable warning messages
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def uso():
     print("Megaman AI")
