@@ -24,13 +24,13 @@ estados:
       - "5"
       - "6"
     comando:
-      - left
+      - right
   
   escorregando:
     sprites:
       - "7"
     comando:
-      - left
+      - right
       - down
       - A
   
@@ -38,7 +38,7 @@ estados:
     sprites:
       - "8"
     comando:
-      - left
+      - right
       - A
       
   subindo:
@@ -65,14 +65,14 @@ estados:
       - "14"
       - "15"
     comando:
-      - left
+      - right
       - B
 
   disparando_pulando:
     sprites:
       - "16"
     comando:
-      - left
+      - right
       - A
       - B
   
