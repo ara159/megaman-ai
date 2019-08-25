@@ -4,18 +4,18 @@ import tensorflow as tf
 from tensorflow import keras
 
 # Variáveis globais
-_caminho = "" # caminho do arquivo modelo
+_caminho = "modelos/" # caminho do arquivo modelo
 modelo = None # O modelo que carregado
 
-def carregar(caminho, num_classes):
+def carregar(nome, num_classes):
     """Carrega o modelo em caminho e atualiza o modelo carregado. Se o arquivo
      existe: Carrega o modele. Se não existe existe: Cria um novo modelo"""
     global modelo, _caminho
     
-    _caminho = caminho
+    _caminho += nome
 
-    if path.isfile(caminho):
-        modelo = keras.models.load_model(caminho)
+    if path.isfile(nome):
+        modelo = keras.models.load_model(nome)
     else:
         modelo = keras.Sequential([
                 keras.layers.Flatten(input_shape=(240, 256)),

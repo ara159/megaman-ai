@@ -40,9 +40,6 @@ class Treinamento:
             # Abre o video
             videoCapture = cv2.VideoCapture(video)
 
-            # Verifica se o video já foi iniciado anteriormente
-            self._continuar(video, videoCapture)
-
             # Exibe algumas informações antes do inicio do treinamento
             self._exibirInfosInicioTreinamento(video)
 

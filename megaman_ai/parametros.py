@@ -29,7 +29,7 @@ class Parametros:
     room = "MegaMan3.nes"
     fceux = "/usr/games/fceux"
     fceux_script = "server.lua"
-    inteligencia = "inteligencia.h5"
+    nome = ""
     epochs = 50
     batch_size = 300
 
@@ -72,13 +72,21 @@ class Parametros:
 
         return opts
 
+    def _validarGeral(self):
+        tudoOk = True
+        # TODO: Mudar a verificação de sprites para cá
+        if len(self.nome) == 0:
+            print("É necessário passar o nome da inteligencia.")
+            tudoOk = False
+        return tudoOk
+
     def validarTreinamento(self):
         """Executa a validação das informações recebidas
         para o modo treinamento"""
         
         # TODO: Verificar se os videos passados são do formato aceito
 
-        tudoOk = True
+        tudoOk = self._validarGeral()
 
         # Verifica existência do arquivo de sprites
         if not path.isfile(self.sprites):
@@ -133,7 +141,7 @@ class Parametros:
         """Executa a validação das informações recebidas
         para o modo jogar"""
 
-        tudoOk = True
+        tudoOk = self._validarGeral()
         
         # TODO: Verificar se o fceux está instalado
 
@@ -177,14 +185,7 @@ class Parametros:
                 print("Valor {} em sequencia, fora do intervalo correto.".format(k), end="") 
                 print("Aceitos valores entre 1 e 8 sem repetição.")
                 tudoOk = False
-        
-        # Testa se já existe um modelo de inteligencia
-        if not path.isfile(self.inteligencia):
-            print("Arquivo de inteligencia {} não existe. ".format(self.inteligencia) +
-                    "Lembre-se que é preciso treinar antes de jogar. "+
-                    "Use o parâmetro help para mais informações")
-            tudoOk = False
-        
+
         return tudoOk
 
 def parse():

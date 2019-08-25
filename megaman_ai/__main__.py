@@ -29,8 +29,9 @@ def uso():
     print("Opções Gerais:")
     print("  --ajuda:")
     print("       Exibe esta mensagem de ajuda.")
-    print("  --inteligencia=<caminho>:")
-    print("       Caminho para o arquivo que ficará gravada a inteligência.")
+    print("  --nome=<nome inteligencia>:")
+    print("       Caso a inteligencia exista ela é carregada.")
+    print("       Caso não exista, ela é criada.")
     print("")
     print("Opções modo Treinamento:")
     print("  --sprites=<caminho>:")
@@ -75,7 +76,7 @@ def treinamento(params):
         exit(3)
     
     # carrega a inteligência
-    megaman_ai.inteligencia.carregar(params.inteligencia, len(params.sprites['estados']))
+    megaman_ai.inteligencia.carregar(params.nome, len(params.sprites['estados']))
     
     treino = megaman_ai.treinamento.Treinamento(
         videos=params.videos,
