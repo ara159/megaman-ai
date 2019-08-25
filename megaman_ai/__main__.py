@@ -1,6 +1,6 @@
 from os import environ
 
-import megaman_ai
+from . import parametros, inteligencia, treinamento, jogo
 from tensorflow.python.util import deprecation
 
 # disable warning messages
@@ -68,7 +68,7 @@ def uso():
     exit(3)
 
 
-def treinamento(params):
+def treinar(params):
     """Verifica os parâmetros para treinamento e
     inicia com as opções recebidas"""
     
@@ -76,9 +76,9 @@ def treinamento(params):
         exit(3)
     
     # carrega a inteligência
-    megaman_ai.inteligencia.carregar(params.nome, len(params.sprites['estados']))
+    inteligencia.carregar(params.nome, len(params.sprites['estados']))
     
-    treino = megaman_ai.treinamento.Treinamento(
+    treino = treinamento.Treinamento(
         videos=params.videos,
         sprites=params.sprites,
         epochs=params.epochs,
@@ -99,9 +99,9 @@ def jogar(params):
         exit(3)
     
     # carrega a inteligência
-    megaman_ai.inteligencia.carregar(params.inteligencia, None)
+    inteligencia.carregar(params.inteligencia, None)
 
-    jogo = megaman_ai.jogo.Jogo(
+    jogar = jogo.Jogo(
         room = params.room,
         sprites = params.sprites,
         sequencia = params.sequencia, 
@@ -109,12 +109,12 @@ def jogar(params):
         fceux=params.fceux,
         fceux_script=params.fceux_script)
     
-    jogo.iniciar()
+    jogar.iniciar()
 
 if __name__ == "__main__":
     # Recebe parâmetros via linha de comando
     try:
-        params = megaman_ai.parametros.parse()
+        params = parametros.parse()
     except Exception as erro:
         print(erro)
         uso() # exit
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     
     # Modo treinameto
     if params.treinamento:
-        treinamento(params)
+        treinar(params)
     
     # Modo jogar
     else:

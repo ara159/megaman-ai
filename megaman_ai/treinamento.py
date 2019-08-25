@@ -10,10 +10,9 @@ import cv2
 import numpy
 import yaml
 import os
-import megaman_ai
 import timeit
 
-from megaman_ai import inteligencia
+from . import inteligencia, visao
 
 class Treinamento:
     """Armazena informações sobre uma instancia de treinamento
@@ -21,7 +20,7 @@ class Treinamento:
 
     def __init__(self, videos, sprites, **kwargs):
         self.videos = videos
-        self.visao = megaman_ai.visao.MegaMan(sprites)
+        self.visao = visao.MegaMan(sprites)
         self.destino = kwargs.get("destino", "")
         self.tempo = kwargs.get("tempo", False)
         self.exibir = kwargs.get("exibir", False)
@@ -80,7 +79,7 @@ class Treinamento:
 
             if not fimVideo:
                 frameRedimencionado = cv2.resize(frameBruto, (256, 240))
-                frameTratado = megaman_ai.visao.MegaMan.transformar(frameRedimencionado)
+                frameTratado = visao.MegaMan.transformar(frameRedimencionado)
                 
                 # atualizar o estado do objeto megaman usando o frame
                 qualidade = self.visao.atualizar(frameTratado, 20)

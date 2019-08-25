@@ -9,7 +9,7 @@ import cv2
 import numpy
 import yaml
 
-from megaman_ai import inteligencia, visao
+from . import inteligencia, visao
 
 # TODO: Usar um "whereis" para encontrar o caminho do executável do emulador
 # TODO: É obrigatório passar o arquivo com os sprites para modo jogar
