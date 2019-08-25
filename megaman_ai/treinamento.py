@@ -31,7 +31,6 @@ class Treinamento:
         self.estatisticas = Estatisticas()
         self._frameAnterior = None, -1
         self._s = [],[]
-        self._obterHistorico()
 
     def iniciar(self):
         """Inicia o treinamento em todos os videos"""
@@ -58,9 +57,6 @@ class Treinamento:
 
             # Exibe informações no fim do treinamento
             self._exibirInfosFimTreinamento(video)
-
-            # Após o treinamento com o video, atualiza o histórico
-            self._atualizarHistorico(video, videoCapture)
             
             # Salva modelo
             inteligencia.salvar()
@@ -73,70 +69,6 @@ class Treinamento:
     def _exibirInfosInicioTreinamento(self, video):
         """Exibe algumas informações depois do treinamento com o video"""
         print("Iniciando treinamento video {}.".format(video))
-
-    def _continuar(self, video, videoCapture):
-        """Tenta continuar o treinamento do video"""
-        # Verifica se é para usar o histórico
-        if not self.usarHistorico:
-            return
-
-        # Caso possa
-
-        # Se o histórico for None (primeira execução)
-        elif self.historico is None:
-
-            # Inicia uma estatística zerada
-            self.estatisticas.iniciar()
-
-        # Se não for None e video é chave
-        elif video in self.historico:
-            
-            # Atualiza as estatisticas do treinamento para as que estavam anteriormente
-            self.estatisticas = self.historico[video]
-            
-            # Skipa o video para o último frame do historico
-            if videoCapture.set(cv2.CAP_PROP_POS_FRAMES, self.estatisticas.frameAtual):
-                return
-            
-            # Se não conseguir skipar, recomeça do inicio do video
-            else:
-                print("Não foi possivel continuar o treinamento com o video {}".format(video))
-
-        # Se não conseguir skipar, ou o video não estiver no histórico, inicia do zero o video
-        self.estatisticas.iniciar()
-        
-        return
-
-    def _obterHistorico(self):
-        """Obtém o histórico e retorna"""
-        # Verifica se é para usar o histórico
-        if not self.usarHistorico:
-            return None
-        
-        # Abre o arquivo e lê como yaml
-        arquivo = open(self.arquivoHistorico, 'r')
-        self.historico = yaml.load(arquivo.read())
-        arquivo.close()
-
-    def _atualizarHistorico(self, videoNome, videoCapture):
-        """Atualiza o arquivo de histórico com os dados mais recentes do video"""
-        #! disabilitado para debugar
-        # Verifica se é para usar o histórico
-        # if not self.usarHistorico:
-        #     return
-        
-        # # Se o historico atual for None (normalmente a primeira execução)
-        # if self.historico is None:
-
-        #     # Inicializa um dict
-        #     self.historico = {}
-        
-        # # Seta a chave como sendo o caminho do video e o valor sendo as estatisticas
-        # self.historico[videoNome] = self.estatisticas
-
-        # # Atualiza as informações
-        # arquivo = open(self.arquivoHistorico, 'w')
-        # arquivo.write(yaml.dump(self.historico))
 
     def _treinar(self, videoCapture):
         """Executa o treinamento em um video"""

@@ -1,3 +1,5 @@
+from os import environ
+
 import megaman_ai
 from tensorflow.python.util import deprecation
 
@@ -33,9 +35,6 @@ def uso():
     print("Opções modo Treinamento:")
     print("  --sprites=<caminho>:")
     print("       Arquivo yaml com as informações de sprites.")
-    print("  --historico=<caminho>:")
-    print("       Onde o arquivo de histórico será criado e consultado.")
-    print("       Por padrão ficará em '~/.megaman_ai/historico.yaml'")
     print("  --exibir:")
     print("       Exibir saida da visão com estátisticas sobre o treinamento.")
     print("  --qualidade:")
@@ -86,8 +85,7 @@ def treinamento(params):
         destino=params.destino,
         exibir=params.exibir,
         tempo=params.tempo,
-        qualidade=params.qualidade,
-        historico=params.historico)
+        qualidade=params.qualidade)
     
     treino.iniciar()
 

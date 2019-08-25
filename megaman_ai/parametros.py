@@ -26,7 +26,6 @@ class Parametros:
     qualidade = False
     tempo = False
     destino = ""
-    historico = ""
     room = "MegaMan3.nes"
     fceux = "/usr/games/fceux"
     fceux_script = "server.lua"
@@ -80,20 +79,6 @@ class Parametros:
         # TODO: Verificar se os videos passados são do formato aceito
 
         tudoOk = True
-
-        # Verifica se o arquivo de histórico existe, se não existir, cria
-        if len(self.historico) > 0:
-            if not path.isfile(self.historico):
-                print("Criando arquivo de historico {}".format(arquivo))
-                open(self.historico, 'w').close()
-        else:
-            pasta = path.expanduser("~")+"/.megaman_ai"
-            arquivo = pasta+"/historico.yaml"
-            if not path.isdir(pasta):
-                path.os.mkdir(pasta)
-            if not path.isfile(arquivo):
-                open(arquivo, 'w').close()
-            self.historico = arquivo
 
         # Verifica existência do arquivo de sprites
         if not path.isfile(self.sprites):
