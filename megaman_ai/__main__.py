@@ -74,7 +74,7 @@ def treinar(params):
         exit(3)
     
     # carrega a inteligência
-    inteligencia.carregar(params.nome, len(params.sprites['estados']))
+    inteligencia.carregar(params.nome)
     
     treino = treinamento.Treinamento(
         videos=params.videos,
@@ -95,7 +95,7 @@ def jogar(params):
         exit(3)
     
     # carrega a inteligência
-    inteligencia.carregar(params.nome, None)
+    inteligencia.carregar(params.nome)
 
     jogar = jogo.Jogo(
         room = params.room,

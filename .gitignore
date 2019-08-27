@@ -7,4 +7,5 @@ prints
 server
 env
 lua
-.h5
+*.h5
+*.sh

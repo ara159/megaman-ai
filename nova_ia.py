@@ -22,7 +22,7 @@ O exemplo é funcional, apenas descomente e rode.
 #         keras.layers.Flatten(input_shape=(240, 256)),
 #         keras.layers.Dense(128, activation=tf.nn.relu),
 #         keras.layers.Dense(64, activation=tf.nn.relu),
-#         keras.layers.Dense(num_classes * 2, activation=tf.nn.softmax),
+#         keras.layers.Dense(20, activation=tf.nn.softmax),
 #     ])
 
 # modelo.compile(
