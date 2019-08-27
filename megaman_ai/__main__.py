@@ -95,7 +95,7 @@ def jogar(params):
         exit(3)
     
     # carrega a inteligência
-    inteligencia.carregar(params.inteligencia, None)
+    inteligencia.carregar(params.nome, None)
 
     jogar = jogo.Jogo(
         room = params.room,
