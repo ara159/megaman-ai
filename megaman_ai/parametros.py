@@ -25,7 +25,6 @@ class Parametros:
     sequencia = "1,2,3,4,5,6,7,8"
     qualidade = False
     tempo = False
-    destino = ""
     room = "MegaMan3.nes"
     fceux = "/usr/games/fceux"
     fceux_script = "server.lua"
@@ -49,6 +48,10 @@ class Parametros:
         
         # Configura os valores extras de parâmetro
         self.videos = opts[1]
+
+        # converte valores
+        self.epochs = int(self.epochs)
+        self.batch_size = int(self.batch_size)
 
     @staticmethod
     def getopts():
@@ -77,6 +80,9 @@ class Parametros:
         # TODO: Mudar a verificação de sprites para cá
         if len(self.nome) == 0:
             print("É necessário passar o nome da inteligencia.")
+            tudoOk = False
+        if not path.isfile("modelos/"+self.nome+".h5"):
+            print("A inteligência {} não existe em modelos.".format(self.nome))
             tudoOk = False
         return tudoOk
 
@@ -129,11 +135,6 @@ class Parametros:
             if not path.isfile(video):
                 print("Video {} não encontrado.".format(video))
                 tudoOk = False
-
-        # Verifica se a pasta destino existe, vazio significa pasta atual
-        if len(self.destino) > 0 and not path.isdir(self.destino):
-            print("Pasta destino {} não exite.".format(self.destino))
-            tudoOk = False
 
         return tudoOk
 

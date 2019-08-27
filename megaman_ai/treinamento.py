@@ -13,6 +13,7 @@ import os
 import timeit
 
 from . import inteligencia, visao
+from . import logger
 
 class Treinamento:
     """Armazena informações sobre uma instancia de treinamento
@@ -21,13 +22,13 @@ class Treinamento:
     def __init__(self, videos, sprites, **kwargs):
         self.videos = videos
         self.visao = visao.MegaMan(sprites)
-        self.destino = kwargs.get("destino", "")
         self.tempo = kwargs.get("tempo", False)
         self.exibir = kwargs.get("exibir", False)
         self.qualidade = kwargs.get("qualidade", False)
         self.epochs = kwargs.get("epochs", 50)
         self.batch_size = kwargs.get("batch_size", 100)
         self.estatisticas = Estatisticas()
+        self.nome = kwargs.pop("nome")
         self._frameAnterior = None, -1
         self._s = [],[]
 
@@ -52,24 +53,29 @@ class Treinamento:
                 print("Iterrompido pelo usuário.")
 
             # Exibe informações no fim do treinamento
-            self._exibirInfosFimTreinamento(video)
+            self._exibirInfosFimVideo(video)
             
             # Salva modelo
             inteligencia.salvar()
 
-    def _exibirInfosFimTreinamento(self, video):
+    def _exibirInfosFimVideo(self, video):
         """Exibe algumas informações antes do treinamento com o video"""
         inteligencia.modelo.summary()
-        print("Fim de treinamento com o video {}.".format(video))
+        print("Fim de treinamento com o video {}".format(video))
 
     def _exibirInfosInicioTreinamento(self, video):
         """Exibe algumas informações depois do treinamento com o video"""
-        print("Iniciando treinamento video {}.".format(video))
+        logger.info("{} - Iniciando treinamento: batch_size={} epochs={} videos={}".format(
+            self.nome, self.epochs, self.batch_size, self.videos))
 
     def _treinar(self, videoCapture):
         """Executa o treinamento em um video"""
         
         self._s = [],[]
+        rodada = 0
+        
+        log_fmt = "{} - rodada={} batch={}\nrotulos={}\n{}"
+        printEpoch = lambda x: "\n".join(["epoch={:6.4} loss={:12.10} acc={:6.4}".format(str(i), str(x['loss'][i]), str(x['acc'][i])) for i in range(self.epochs)])
 
         # Lê o video até o fim
         while videoCapture.isOpened():
@@ -95,20 +101,26 @@ class Treinamento:
                 # atualiza o frame anterior
                 self._frameAnterior = frameTratado,self.visao.rotulo
                 
-            if len(self._s[0]) == self.batch_size or fimVideo: # ou fim do video
-                inteligencia.modelo.fit(
+            if len(self._s[0]) == self.batch_size or fimVideo:
+                hist = inteligencia.modelo.fit(
                     numpy.array(self._s[0])/255.0, 
                     numpy.array(self._s[1]),
                     batch_size=self.batch_size,
-                    epochs=self.epochs)
+                    epochs=self.epochs, verbose=1)
+                
+                logger.info(log_fmt.format(
+                    self.nome, rodada, len(self._s[0]),
+                    self._s[1], printEpoch(hist.history)))
+                
                 # limpa o batch
                 self._s[0].clear()
                 self._s[1].clear()
+                rodada += 1
 
-            # Atualiza as estatísticas com os novos dados
+            # TODO: Atualiza as estatísticas com os novos dados
             # TODO: A qualidade deve ser atualizada a cada frame que pega, 
-            # neste momento está sendo calculado errado
-            # talvez retirar essa estatística seja uma opção
+            # TODO: neste momento está sendo calculado errado
+            # TODO: talvez retirar essa estatística seja uma opção
             self.estatisticas.atualizar(videoCapture, 0) 
 
             # Exibe informações do treinamento no console

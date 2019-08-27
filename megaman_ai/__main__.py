@@ -1,6 +1,6 @@
 from os import environ
 
-from . import parametros, inteligencia, treinamento, jogo
+from . import logger, parametros, inteligencia, treinamento, jogo
 from tensorflow.python.util import deprecation
 
 # disable warning messages
@@ -31,7 +31,7 @@ def uso():
     print("       Exibe esta mensagem de ajuda.")
     print("  --nome=<nome inteligencia>:")
     print("       Caso a inteligencia exista ela é carregada.")
-    print("       Caso não exista, ela é criada.")
+    print("       Caso não exista, será necessário cria-la, olhe o arquivo nova_ia.py.")
     print("")
     print("Opções modo Treinamento:")
     print("  --sprites=<caminho>:")
@@ -44,8 +44,6 @@ def uso():
     print("       Carrega um estado pré carregado no emulador.")
     print("  --tempo:")
     print("       Exibe estatísticas sobre o tempo dos frames.")
-    print("  --destino=<caminho>:")
-    print("       Pasta de destino. Caso seja omitido, será a pasta atual.")
     print("  --epochs=<int>:")
     print("       Número de épocas para cada batch. Padrão: 50")
     print("  --batch_size=<int>:")
@@ -83,10 +81,8 @@ def treinar(params):
         sprites=params.sprites,
         epochs=params.epochs,
         batch_size=params.batch_size,
-        destino=params.destino,
         exibir=params.exibir,
-        tempo=params.tempo,
-        qualidade=params.qualidade)
+        nome=params.nome)
     
     treino.iniciar()
 
@@ -130,3 +126,5 @@ if __name__ == "__main__":
     # Modo jogar
     else:
         jogar(params)
+
+    logger.close()
