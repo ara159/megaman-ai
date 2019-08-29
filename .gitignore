@@ -9,3 +9,4 @@ env
 lua
 *.h5
 *.sh
+modelos/*.h5
