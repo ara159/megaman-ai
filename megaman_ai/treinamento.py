@@ -27,7 +27,6 @@ class Treinamento:
         self.qualidade = kwargs.get("qualidade", False)
         self.epochs = kwargs.get("epochs", 50)
         self.batch_size = kwargs.get("batch_size", 100)
-        self.estatisticas = Estatisticas()
         self.nome = kwargs.pop("nome")
         self._frameAnterior = None, -1
         self._s = [],[]
@@ -119,14 +118,8 @@ class Treinamento:
                 self._s[1].clear()
                 rodada += 1
 
-            # TODO: Atualiza as estatísticas com os novos dados
-            # TODO: A qualidade deve ser atualizada a cada frame que pega, 
-            # TODO: neste momento está sendo calculado errado
-            # TODO: talvez retirar essa estatística seja uma opção
-            self.estatisticas.atualizar(videoCapture, 0) 
-
             # Exibe informações do treinamento no console
-            self._exibirInfoTreinamento()
+            self._exibirInfoTreinamento(videoCapture)
 
             # Exibe a visão atual com alguns dados
             self._exibirVisaoTreinamento(frameTratado)
@@ -135,54 +128,23 @@ class Treinamento:
             if (cv2.waitKey(1) & 0xFF) == ord('q') or fimVideo:
                 break
 
-    def _exibirInfoTreinamento(self):
+    def _exibirInfoTreinamento(self, videoCapture):
         """Print de informações sobre o andamento do treinamento"""
-
         # Progresso
-        progresso = self.estatisticas.progresso
-        print("Progresso: [{}] {}% {}\r".format(
-                "#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4)),
-                progresso,
-                "{}/{}".format(len(self._s[0]), self.batch_size)),
-            end="")
+        frameAtual = int(videoCapture.get(cv2.CAP_PROP_POS_FRAMES))
+        framesTotal = int(videoCapture.get(cv2.CAP_PROP_FRAME_COUNT))
+        progresso = int((frameAtual/framesTotal)*100)
+        texto = "Progresso: [{}] {}% {}\r"
+        statBatch = "{}/{}".format(len(self._s[0]), self.batch_size)
+        preenchimento = "#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4))
+        # imprime
+        print(texto.format(preenchimento, progresso, statBatch, end=""))
 
     def _exibirVisaoTreinamento(self, frame):
         """Mostra a visão do treinamento"""
-
         if self.exibir:
-            progresso = self.estatisticas.progresso
-            qualidade = self.estatisticas.qualidadeAtual
-            self.visao.desenhar_infos(frame, progresso, qualidade)
-
-
-class Estatisticas:
-    """Armazena as informações sobre o desempenho do treinamento"""
-    framesTotal = None
-    frameAtual = 0
-    progresso = 0
-    qualidadeAtual = 0
-    qualidadeTotal = 0
-    qualidadeMedia = 0
-    tempoTotal = 0
-    tempoMedioFrame = 0
-    tempoInicial = 0
-
-    def iniciar(self):
-        """Inicia as estatísticas"""
-
-        # Seta o tempoInicial
-        self.tempoInicial = timeit.default_timer()
-
-    def atualizar(self, videoCapture, qualidadeAtual):
-        """Recebe e atualiza as informações"""
-
-        # Atualiza os contadores
-        self.framesTotal = int(videoCapture.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.frameAtual = int(videoCapture.get(cv2.CAP_PROP_POS_FRAMES))
-        self.progresso = int((self.frameAtual / self.framesTotal) * 100)
-        self.qualidadeTotal += qualidadeAtual
-        self.qualidadeMedia = self.qualidadeTotal / self.frameAtual
-        diferenca = timeit.default_timer() - self.tempoInicial
-        self.tempoTotal += diferenca
-        self.tempoMedioFrame = self.tempoTotal / self.frameAtual
-        self.tempoInicial = timeit.default_timer()
+            #* Comentado pois se tornou desnecessário
+            # progresso = self.estatisticas.progresso
+            # qualidade = self.estatisticas.qualidadeAtual
+            # self.visao.desenhar_infos(frame, progresso, qualidade)
+            cv2.imshow("Treinamento", frame)
