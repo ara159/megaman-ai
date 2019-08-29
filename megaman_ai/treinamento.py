@@ -106,7 +106,9 @@ class Treinamento:
                     numpy.array(self._s[0])/255.0, 
                     numpy.array(self._s[1]),
                     batch_size=self.batch_size,
-                    epochs=self.epochs, verbose=1)
+                    epochs=self.epochs, 
+                    verbose=1, 
+                    shuffle=True)
                 
                 logger.info(log_fmt.format(
                     self.nome, rodada, len(self._s[0]),
