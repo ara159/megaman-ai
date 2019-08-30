@@ -66,8 +66,9 @@ class Treinamento:
 
     def _exibirInfosInicioTreinamento(self, video):
         """Exibe algumas informações depois do treinamento com o video"""
-        self._log.write("{} - Iniciando treinamento: batch_size={} epochs={} videos={}".format(
-            self.nome, self.epochs, self.batch_size, self.videos))
+        # self._log.write("{} - Iniciando treinamento: batch_size={} epochs={} videos={}".format(
+        #     self.nome, self.epochs, self.batch_size, self.videos))
+        pass
 
     def _treinar(self, videoCapture):
         """Executa o treinamento em um video"""
@@ -123,16 +124,14 @@ class Treinamento:
                 break
 
     def _atualizarLog(self, historico):
-        historico = historico.history
-        log_fmt = "{} - {} - rodada={} batch={}\nrotulos={}\n{}\n"
-        formato = "epoch={:6.4} loss={:12.10} acc={:6.4}"
-        data = datetime.now().isoformat()
-
-        dados = "\n".join([formato.format(str(i), str(historico['loss'][i]), str(historico['acc'][i])) for i in range(self.epochs)])
-
-        # envia os dados para o arquivo
-        self._log.write(log_fmt.format(data, self.nome, self._rodada, len(self._s[0]), self._s[1], dados))
-
+        info = Info(
+            acc = list(map(float, historico.history['acc'])), 
+            loss = list(map(float, historico.history['loss'])),
+            rotulos = self._s[1],
+            tam_batch = len(self._s[0]))
+        
+        self._log.write(str(info))
+        
     def _fit(self):
         historico = inteligencia.modelo.fit(
             numpy.array(self._s[0])/255.0, 
@@ -164,3 +163,10 @@ class Treinamento:
             # qualidade = self.estatisticas.qualidadeAtual
             # self.visao.desenhar_infos(frame, progresso, qualidade)
             cv2.imshow("Treinamento", frame)
+
+class Info:
+    def __init__(self, **kwargs):
+        self.__dict__ = kwargs
+    
+    def __str__(self):
+        return yaml.dump({datetime.now().isoformat(): self.__dict__})
