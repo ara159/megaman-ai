@@ -11,9 +11,9 @@ import numpy
 import yaml
 import os
 import timeit
+from datetime import datetime
 
 from . import inteligencia, visao
-from . import logger
 
 class Treinamento:
     """Armazena informações sobre uma instancia de treinamento
@@ -30,12 +30,14 @@ class Treinamento:
         self.nome = kwargs.pop("nome")
         self._frameAnterior = None, -1
         self._s = [],[]
+        self._rodada = 0
+        self._log = open("logs/"+self.nome+".log", "a")
 
     def iniciar(self):
         """Inicia o treinamento em todos os videos"""
 
         for video in self.videos:
-            
+
             # Abre o video
             videoCapture = cv2.VideoCapture(video)
 
@@ -64,18 +66,15 @@ class Treinamento:
 
     def _exibirInfosInicioTreinamento(self, video):
         """Exibe algumas informações depois do treinamento com o video"""
-        logger.info("{} - Iniciando treinamento: batch_size={} epochs={} videos={}".format(
+        self._log.write("{} - Iniciando treinamento: batch_size={} epochs={} videos={}".format(
             self.nome, self.epochs, self.batch_size, self.videos))
 
     def _treinar(self, videoCapture):
         """Executa o treinamento em um video"""
         
         self._s = [],[]
-        rodada = 0
+        self._rodada = 0
         
-        log_fmt = "{} - rodada={} batch={}\nrotulos={}\n{}"
-        printEpoch = lambda x: "\n".join(["epoch={:6.4} loss={:12.10} acc={:6.4}".format(str(i), str(x['loss'][i]), str(x['acc'][i])) for i in range(self.epochs)])
-
         # Lê o video até o fim
         while videoCapture.isOpened():
             # Obtém o frame do video e aplica tranformações iniciais
@@ -87,36 +86,31 @@ class Treinamento:
                 frameTratado = visao.MegaMan.transformar(frameRedimencionado)
                 
                 # atualizar o estado do objeto megaman usando o frame
-                qualidade = self.visao.atualizar(frameTratado, 20)
+                self.visao.atualizar(frameTratado, 20)
                 
                 # treina a rede com o frame anterior e o rótulo do frame atual
                 # apenas nas transições
-                if not self._frameAnterior[0] is None and \
-                    self._frameAnterior[1] != self.visao.rotulo and \
-                    self.visao.rotulo != -1:
+                temAnterior = not self._frameAnterior[0] is None
+                isTransicao = self._frameAnterior[1] != self.visao.rotulo
+                temEstadoAtual = self.visao.rotulo != -1
+
+                if temAnterior and isTransicao and temEstadoAtual:
+                    # coloca no dataset
                     self._s[0].append(self._frameAnterior[0])
                     self._s[1].append(self.visao.rotulo)
                 
-                # atualiza o frame anterior
-                self._frameAnterior = frameTratado,self.visao.rotulo
-                
-            if len(self._s[0]) == self.batch_size or fimVideo:
-                hist = inteligencia.modelo.fit(
-                    numpy.array(self._s[0])/255.0, 
-                    numpy.array(self._s[1]),
-                    batch_size=self.batch_size,
-                    epochs=self.epochs, 
-                    verbose=1, 
-                    shuffle=True)
-                
-                logger.info(log_fmt.format(
-                    self.nome, rodada, len(self._s[0]),
-                    self._s[1], printEpoch(hist.history)))
-                
+            # atualiza o frame anterior
+            self._frameAnterior = frameTratado,self.visao.rotulo
+
+            # Verifica se está pronto para treinar
+            prontoTreinar = len(self._s[0]) == self.batch_size 
+
+            if  prontoTreinar or fimVideo:
+                self._fit()
                 # limpa o batch
                 self._s[0].clear()
                 self._s[1].clear()
-                rodada += 1
+                self._rodada += 1
 
             # Exibe informações do treinamento no console
             self._exibirInfoTreinamento(videoCapture)
@@ -128,6 +122,28 @@ class Treinamento:
             if (cv2.waitKey(1) & 0xFF) == ord('q') or fimVideo:
                 break
 
+    def _atualizarLog(self, historico):
+        historico = historico.history
+        log_fmt = "{} - {} - rodada={} batch={}\nrotulos={}\n{}\n"
+        formato = "epoch={:6.4} loss={:12.10} acc={:6.4}"
+        data = datetime.now().isoformat()
+
+        dados = "\n".join([formato.format(str(i), str(historico['loss'][i]), str(historico['acc'][i])) for i in range(self.epochs)])
+
+        # envia os dados para o arquivo
+        self._log.write(log_fmt.format(data, self.nome, self._rodada, len(self._s[0]), self._s[1], dados))
+
+    def _fit(self):
+        historico = inteligencia.modelo.fit(
+            numpy.array(self._s[0])/255.0, 
+            numpy.array(self._s[1]),
+            batch_size=self.batch_size,
+            epochs=self.epochs, 
+            verbose=1, 
+            shuffle=True)
+        
+        self._atualizarLog(historico)
+
     def _exibirInfoTreinamento(self, videoCapture):
         """Print de informações sobre o andamento do treinamento"""
         # Progresso
@@ -138,7 +154,7 @@ class Treinamento:
         statBatch = "{}/{}".format(len(self._s[0]), self.batch_size)
         preenchimento = "#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4))
         # imprime
-        print(texto.format(preenchimento, progresso, statBatch, end=""))
+        print(texto.format(preenchimento, progresso, statBatch), end="")
 
     def _exibirVisaoTreinamento(self, frame):
         """Mostra a visão do treinamento"""

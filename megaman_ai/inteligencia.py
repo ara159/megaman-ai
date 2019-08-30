@@ -2,7 +2,6 @@ from os import path
 
 import tensorflow as tf
 from tensorflow import keras
-from . import logger
 
 # Variáveis globais
 _caminho = "modelos/" # caminho do arquivo modelo
@@ -14,7 +13,6 @@ def carregar(nome):
     global modelo, _caminho
     _caminho += nome+".h5"
     modelo = keras.models.load_model(_caminho)
-    logger.info("{} - Modelo carregado".format(nome))
 
 def salvar():
     """Salva o modelo carregado atualmente em aquivo"""

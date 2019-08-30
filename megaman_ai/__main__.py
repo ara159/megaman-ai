@@ -1,6 +1,6 @@
 from os import environ
 
-from . import logger, parametros, inteligencia, treinamento, jogo
+from . import parametros, inteligencia, treinamento, jogo
 from tensorflow.python.util import deprecation
 
 # disable warning messages
@@ -126,5 +126,3 @@ if __name__ == "__main__":
     # Modo jogar
     else:
         jogar(params)
-
-    logger.close()
