@@ -84,6 +84,7 @@ class Treinamento:
 
             if not fimVideo:
                 frameRedimencionado = cv2.resize(frameBruto, (256, 240))
+                frameCinza = cv2.cvtColor(frameRedimencionado, cv2.COLOR_BGR2GRAY)
                 frameTratado = visao.MegaMan.transformar(frameRedimencionado)
                 
                 # atualizar o estado do objeto megaman usando o frame
@@ -101,7 +102,7 @@ class Treinamento:
                     self._s[1].append(self.visao.rotulo)
                 
             # atualiza o frame anterior
-            self._frameAnterior = frameTratado,self.visao.rotulo
+            self._frameAnterior = frameCinza,self.visao.rotulo
 
             # Verifica se está pronto para treinar
             prontoTreinar = len(self._s[0]) == self.batch_size 
@@ -121,6 +122,7 @@ class Treinamento:
 
             # Quando a tecla 'q' é pressionada interrompe o treinamento
             if (cv2.waitKey(1) & 0xFF) == ord('q') or fimVideo:
+                cv2.destroyAllWindows()
                 break
 
     def _atualizarLog(self, historico):

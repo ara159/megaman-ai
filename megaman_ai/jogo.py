@@ -30,6 +30,7 @@ class Jogo:
         self._conexao = None
         self._conectado = False
         self._caminhoFrame = "/tmp/.megamanAI.screen"
+        self._winScala = 2
         self.repeticoesA = 0
 
     def iniciar(self):
@@ -42,6 +43,7 @@ class Jogo:
         while self._emulador.isAlive() and self._conectado:
             # executa a função jogar
             self._jogar()
+        print("")
 
         # verifica se o emulador continua ativo (caso tenha dado algum erro com o servidor)
         if self._emulador.isAlive():
@@ -57,8 +59,8 @@ class Jogo:
             # entra em loop tentando ler o arquivo de frame
             frame = None
             while frame is None:
-                frame = cv2.imread(self._caminhoFrame)
-            return frame
+                frame = cv2.imread(self._caminhoFrame, 0)
+            return numpy.concatenate((frame, numpy.zeros((16, 256))))
 
         except ConnectionResetError:
             print("-- Conexão fechada pelo servidor.")
@@ -71,11 +73,13 @@ class Jogo:
         frame = self.obterFrame()
         # trata a imagem
         frame = cv2.resize(frame, (256, 240))
-        frameTratado = visao.MegaMan.transformar(frame)
+        # frameTratado = visao.MegaMan.transformar(frame)
         # passa para a IA para prever o proximo movimento
-        acao = inteligencia.modelo.predict(numpy.array([frameTratado]), use_multiprocessing=True)
+        acao = inteligencia.modelo.predict(numpy.array([frame]), use_multiprocessing=True)
         classe = numpy.argmax(acao[0])
         # pega o comando que o personagem precisa executar
+        print("Ação {:20.20} com {:06.2f}% de certeza\r".format(self.classes[classe], acao[0][classe]*100), end="")
+        
         comando = self.comandos[classe].copy()
         # trata o problema do 'A' pressionado infinitamente
         if "A" in comando:
@@ -87,14 +91,21 @@ class Jogo:
             self.repeticoesA = 0
         # envia o comando para o emulador
         self._enviarComando(comando)
+        
+        cv2.imshow("Jogo", frame)
+        
+        if (cv2.waitKey(1) & 0xFF) == ord('q'):
+            cv2.destroyAllWindows()
+            self._emulador.join()
     
     def _iniciarEmulador(self):
         """Inicia a thread do emulador com os parâmetros passados"""
 
         # define o comando
-        comando = shlex.split("{fceux} --nogui {room} --xscale 2 --yscale 2 --loadlua {fceux_script}".format(
+        comando = shlex.split("{fceux} --nogui {room} --xscale {escala} --yscale {escala} --loadlua {fceux_script}".format(
             fceux=self.fceux,
             room=self.room,
+            escala=self._winScala,
             fceux_script=self.fceux_script))
 
         # executa, essa chamada trava a thread até o fim da execução
