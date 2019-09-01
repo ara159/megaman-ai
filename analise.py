@@ -8,42 +8,78 @@ Created on Fri Aug 30 18:44:29 2019
 
 import numpy as np
 import yaml
-
+from sys import argv
 from megaman_ai import visao
 from matplotlib import pyplot as plt
 
 # pega o nome
-nome = "ffDropOut512-128-20p02-copia"
+if len(argv) > 1:
+    nome = argv[1]
+else:
+    nome = "ffRafael"
 
 # Carrega o log
 log = yaml.load(open("logs/{}.log".format(nome), "r").read())
 
-def plt_rotulos(rotulos):    
-    clss = visao.MegaMan(yaml.load(open("megaman.yaml", "r").read())).classes
-    roto, count = np.unique(rotulos, return_counts=True)
-    plt.title("Distribuição dos rótulos usados")
-    plt.ylabel("quantidade")
-    plt.xlabel("rótulo")
-    plt.hist(np.asarray(rotulos), 20, label=np.array(clss))
+def graf_rot():
+    # Carrega os dados
+    dd = np.array([])
+    for data in log.keys():
+        dd = np.concatenate((dd,log[data]['rotulos']))
+        
+    # Rótulos
+    mm = visao.MegaMan(yaml.load(open("megaman.yaml", "r").read()))
+    rr,qq = np.unique(dd, return_counts=True)
+    cc = ["("+str(int(i))+") "+mm.classes[int(i)] for i in rr]
+    
+    plt.figure(figsize=(12,12))
+    wedges, texts, autotexts = plt.pie(qq, autopct='%1.1f%%')
+    plt.legend(wedges, cc, title="Rótulos")
     plt.show()
+
+def graf_acc():
+    aa = np.array([])
+    mm = [],[]
+    su = 0
     
-acc = np.array([])
-loss = np.array([])
-rotulos = np.array([])
+    for i,data in enumerate(log.keys()):
+        su += len(log[data]['acc'])
+        aa = np.concatenate((aa, log[data]['acc']))
+        mm[0].append(su)
+        mm[1].append(np.mean(log[data]['acc']))
+        
+    plt.plot(aa)
+    plt.plot(mm[0], mm[1])
+    plt.xlabel("epoch")
+    plt.ylabel("acc")
+    plt.show()
 
-for fit in list(log.keys()):
-    rotulos = np.concatenate((rotulos, log[fit]['rotulos']))
-    acc = np.concatenate((acc, log[fit]['acc']))
-    loss = np.concatenate((loss, log[fit]['loss']))
+def graf_loss():
+    ll = np.array([])
+    mm = [],[]
+    su = 0
     
-plt.title("rotulos")
-plt.hist(rotulos, 20)
-plt.show()
+    for i,data in enumerate(log.keys()):
+        su += len(log[data]['loss'])
+        ll = np.concatenate((ll, log[data]['loss']))
+        mm[0].append(su)
+        mm[1].append(np.mean(log[data]['loss']))
+        
+    plt.plot(ll)
+    plt.plot(mm[0], mm[1])
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.show()
 
-plt.title("acc")
-plt.plot(acc)
-plt.show()
-
-plt.title("loss")
-plt.plot(loss)
-plt.show()
+if len(argv) >= 3:
+    if "acc" in argv:
+        graf_acc()
+    if "rot" in argv:
+        graf_rot()
+    if "loss" in argv:
+        graf_loss()
+        
+else:
+    graf_rot()
+    graf_acc()
+    graf_loss()
