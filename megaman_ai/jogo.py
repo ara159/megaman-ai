@@ -72,7 +72,7 @@ class Jogo:
         # pega o ultimo frame do emulador
         frame = self.obterFrame()
         # trata a imagem
-        frame = cv2.resize(frame, (256, 240))
+        frame = cv2.resize(frame, None, fx=0.25, fy=0.25, interpolation=cv2.INTER_NEAREST)
         # frameTratado = visao.MegaMan.transformar(frame)
         # passa para a IA para prever o proximo movimento
         acao = inteligencia.modelo.predict(numpy.array([frame]), use_multiprocessing=True)

@@ -85,6 +85,8 @@ class Treinamento:
             if not fimVideo:
                 frameRedimencionado = cv2.resize(frameBruto, (256, 240))
                 frameCinza = cv2.cvtColor(frameRedimencionado, cv2.COLOR_BGR2GRAY)
+                # Vou usar 1/4 da imagem para treinar
+                frameCinza = cv2.resize(frameCinza, None, fx=0.25, fy=0.25, interpolation=cv2.INTER_NEAREST)
                 frameTratado = visao.MegaMan.transformar(frameRedimencionado)
                 
                 # atualizar o estado do objeto megaman usando o frame
@@ -95,8 +97,11 @@ class Treinamento:
                 temAnterior = not self._frameAnterior[0] is None
                 isTransicao = self._frameAnterior[1] != self.visao.rotulo
                 temEstadoAtual = self.visao.rotulo != -1
+                excecao = self.visao.rotulo in (10, 11)
+                descSubida = self.visao.rotulo in (8, 9) and self._frameAnterior[1] in (8, 9)  
 
-                if temAnterior and isTransicao and temEstadoAtual:
+                if temAnterior and isTransicao and temEstadoAtual and \
+                    not excecao and not descSubida:
                     # coloca no dataset
                     self._s[0].append(self._frameAnterior[0])
                     self._s[1].append(self.visao.rotulo)
@@ -118,7 +123,7 @@ class Treinamento:
             self._exibirInfoTreinamento(videoCapture)
 
             # Exibe a visão atual com alguns dados
-            self._exibirVisaoTreinamento(frameTratado)
+            self._exibirVisaoTreinamento(frameCinza)
 
             # Quando a tecla 'q' é pressionada interrompe o treinamento
             if (cv2.waitKey(1) & 0xFF) == ord('q') or fimVideo:
@@ -164,6 +169,7 @@ class Treinamento:
             # progresso = self.estatisticas.progresso
             # qualidade = self.estatisticas.qualidadeAtual
             # self.visao.desenhar_infos(frame, progresso, qualidade)
+            frame = cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
             cv2.imshow("Treinamento", frame)
 
 class Info:

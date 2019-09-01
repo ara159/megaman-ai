@@ -19,7 +19,7 @@ O exemplo é funcional, apenas descomente e rode.
 # nome = "exemplo01.h5"
 
 # modelo = keras.Sequential([
-#         keras.layers.Flatten(input_shape=(240, 256)),
+#         keras.layers.Flatten(input_shape=(60, 64)),
 #         keras.layers.Dense(128, activation=tf.nn.relu),
 #         keras.layers.Dense(64, activation=tf.nn.relu),
 #         keras.layers.Dense(20, activation=tf.nn.softmax),
