@@ -35,6 +35,8 @@ class Treinamento:
 
     def iniciar(self):
         """Inicia o treinamento em todos os videos"""
+        
+        self._exibirInfoInicioTreino()
 
         for video in self.videos:
 
@@ -42,12 +44,12 @@ class Treinamento:
             videoCapture = cv2.VideoCapture(video)
 
             # Exibe algumas informações antes do inicio do treinamento
-            self._exibirInfosInicioTreinamento(video)
+            self._exibirInfosInicioVideo(video)
 
             try:
                 # Chama a função de treinamento para o video atual
                 self._treinar(videoCapture)
-
+                print("\n")
             # Trata o caso de iterrupção pelo usuário via teclado
             # Para salvar o progresso do video
             except KeyboardInterrupt:
@@ -58,17 +60,42 @@ class Treinamento:
             
             # Salva modelo
             inteligencia.salvar()
+        
+        self._exibirInfoFimTreino()
 
     def _exibirInfosFimVideo(self, video):
         """Exibe algumas informações antes do treinamento com o video"""
-        inteligencia.modelo.summary()
-        print("Fim de treinamento com o video {}".format(video))
+        print("Fim de treinamento com o vídeo: {}".format(video))
 
-    def _exibirInfosInicioTreinamento(self, video):
+    def _exibirInfosInicioVideo(self, video):
         """Exibe algumas informações depois do treinamento com o video"""
-        # self._log.write("{} - Iniciando treinamento: batch_size={} epochs={} videos={}".format(
-        #     self.nome, self.epochs, self.batch_size, self.videos))
-        pass
+        print("Iniciando Treino: {}".format(video))
+
+    def _exibirInfoInicioTreino(self):
+        print("""
+  __  __                  __  __                  _    ___ 
+ |  \/  | ___  __ _  __ _|  \/  | __ _ _ __      / \  |_ _|
+ | |\/| |/ _ \/ _` |/ _` | |\/| |/ _` | '_ \    / _ \  | | 
+ | |  | |  __/ (_| | (_| | |  | | (_| | | | |  / ___ \ | | 
+ |_|  |_|\___|\__, |\__,_|_|  |_|\__,_|_| |_| /_/   \_\___|
+              |___/                                        
+    
+    Iniciando treinamento... 
+    Videos: {}
+    Batch Size: {}
+    Epochs: {}
+    """.format(self.videos, self.batch_size, self.epochs))
+
+    def _exibirInfoFimTreino(self):
+        print("""
+Treinamento finalizado com sucesso!
+
+Arquivo de log: "logs/{}.log"
+Modelo: "{}"
+
+Para jogar use o comando: 
+    sudo python3 -m megaman_ai --nome={}
+    """.format(self.nome, inteligencia._caminho, self.nome))
 
     def _treinar(self, videoCapture):
         """Executa o treinamento em um video"""
@@ -95,10 +122,10 @@ class Treinamento:
                 # treina a rede com o frame anterior e o rótulo do frame atual
                 # apenas nas transições
                 temAnterior = not self._frameAnterior[0] is None
-                isTransicao = self._frameAnterior[1] != self.visao.rotulo
+                isTransicao = True #self._frameAnterior[1] != self.visao.rotulo
                 temEstadoAtual = self.visao.rotulo != -1
                 excecao = self.visao.rotulo in (10, 11)
-                descSubida = self.visao.rotulo in (8, 9) and self._frameAnterior[1] in (8, 9)  
+                descSubida = False # self.visao.rotulo in (8, 9) and self._frameAnterior[1] in (8, 9)  
 
                 if temAnterior and isTransicao and temEstadoAtual and \
                     not excecao and not descSubida:
@@ -140,23 +167,39 @@ class Treinamento:
         self._log.write(str(info))
         
     def _fit(self):
-        historico = inteligencia.modelo.fit(
-            numpy.array(self._s[0])/255.0, 
-            numpy.array(self._s[1]),
-            batch_size=self.batch_size,
-            epochs=self.epochs, 
-            verbose=1, 
-            shuffle=True)
+        treinar = True
+        epochs = self.epochs
         
-        self._atualizarLog(historico)
+        while treinar:
+            historico = inteligencia.modelo.fit(
+                numpy.array(self._s[0])/255.0, 
+                numpy.array(self._s[1]),
+                batch_size=self.batch_size,
+                epochs=epochs, 
+                verbose=1, 
+                shuffle=True)
 
+            self._atualizarLog(historico)
+            
+            print("Mais epochs? Se sim digite a quantidade. Se não pressione Enter.")
+            resp = input(">>> ")
+
+            try:
+                if len(resp) > 0:
+                    treinar = int(resp) != 0
+                    epochs = int(resp)
+                else:
+                    break
+            except:
+                break
+                
     def _exibirInfoTreinamento(self, videoCapture):
         """Print de informações sobre o andamento do treinamento"""
         # Progresso
         frameAtual = int(videoCapture.get(cv2.CAP_PROP_POS_FRAMES))
         framesTotal = int(videoCapture.get(cv2.CAP_PROP_FRAME_COUNT))
         progresso = int((frameAtual/framesTotal)*100)
-        texto = "Progresso: [{}] {}% {}\r"
+        texto = "\rProgresso: [{}] {}% {}"
         statBatch = "{}/{}".format(len(self._s[0]), self.batch_size)
         preenchimento = "#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4))
         # imprime
