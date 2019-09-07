@@ -1,4 +1,5 @@
-from os import environ
+from os import environ, kill, getpid
+import signal
 
 from . import parametros, inteligencia, treinamento, jogo
 from tensorflow.python.util import deprecation
@@ -126,3 +127,5 @@ if __name__ == "__main__":
     # Modo jogar
     else:
         jogar(params)
+
+    kill(getpid(), signal.SIGKILL)

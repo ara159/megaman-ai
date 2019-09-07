@@ -92,6 +92,8 @@ class Jogo:
         # envia o comando para o emulador
         self._enviarComando(comando)
         
+        frame = cv2.resize(frame, None, fx=4, fy=4, interpolation=cv2.INTER_NEAREST)
+        
         cv2.imshow("Jogo", frame)
         
         if (cv2.waitKey(1) & 0xFF) == ord('q'):
