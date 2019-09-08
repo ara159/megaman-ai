@@ -10,7 +10,7 @@ import cv2
 import numpy
 import yaml
 import os
-import timeit
+import time
 from datetime import datetime
 from threading import RLock, Thread, active_count
 
@@ -113,8 +113,8 @@ Para jogar use o comando:
                     self._fimVideo = True
                     break
             worker = Worker(temporario.copy(), self.sprites, self._s, self._lock)
-            print("Thread {} iniciada com {} frames".format(i+1, len(temporario)))
             worker.start()
+            print("Thread {} iniciada com {} frames".format(i+1, len(temporario)))
             temporario.clear()
 
     def _treinar(self, videoCapture):
@@ -130,6 +130,8 @@ Para jogar use o comando:
 
             while active_count() > 1:
                 self._exibirInfoTreinamento(framesTotal, feitos)
+
+            cv2.destroyAllWindows()
 
             if len(self._s[0]) > 0:
                 self._fit()
@@ -150,7 +152,8 @@ Para jogar use o comando:
     def _fit(self):
         treinar = True
         epochs = self.epochs
-        
+        ultimo = 0
+
         while treinar:
             historico = inteligencia.modelo.fit(
                 numpy.array(self._s[0])/255.0, 
@@ -162,18 +165,11 @@ Para jogar use o comando:
 
             self._atualizarLog(historico)
             
-            print("Mais epochs? Se sim digite a quantidade. Se não pressione Enter.")
-            resp = input(">>> ")
+            atual = numpy.mean(historico.history["acc"])
+            treinar = ((atual <= 0.85) or ((atual - ultimo) > 0.002)) and (atual - ultimo) > 0
+            print("\033[31mVariação: ", (atual - ultimo), "\033[0;0m")
+            ultimo = atual
 
-            try:
-                if len(resp) > 0:
-                    treinar = int(resp) != 0
-                    epochs = int(resp)
-                else:
-                    break
-            except:
-                break
-                
     def _exibirInfoTreinamento(self, total, feitos):
         """Print de informações sobre o andamento do treinamento"""
         # Progresso
@@ -183,6 +179,9 @@ Para jogar use o comando:
         preenchimento = "#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4))
         # imprime
         print(texto.format(preenchimento, progresso, statBatch), end="\r")
+        if self.exibir:
+            cv2.imshow("Treinamento", cv2.resize(self._s[0][-1], None, fx=8, fy=8, interpolation=cv2.INTER_NEAREST))
+            cv2.waitKey(1)
 
     def _exibirVisaoTreinamento(self, frame):
         """Mostra a visão do treinamento"""
@@ -216,12 +215,13 @@ class Worker(Thread):
         
         for frame in self.frames:
             
-            frame = cv2.resize(frame, (256, 240))
+            frame = cv2.resize(frame, (256, 240))[:-16,:]
             
             # atualizar o estado do objeto megaman usando o frame
             self.megaman.atualizar(self.megaman.transformar(frame), 20)
             
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            
             frame = cv2.resize(frame, None, fx=0.25, fy=0.25, interpolation=cv2.INTER_NEAREST)
             
             # treina a rede com o frame anterior e o rótulo do frame atual

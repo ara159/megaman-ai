@@ -60,7 +60,7 @@ class Jogo:
             frame = None
             while frame is None:
                 frame = cv2.imread(self._caminhoFrame, 0)
-            return numpy.concatenate((frame, numpy.zeros((16, 256))))
+            return frame
 
         except ConnectionResetError:
             print("-- Conexão fechada pelo servidor.")
@@ -69,15 +69,15 @@ class Jogo:
     def _jogar(self):
         """ Joga o game"""
         
-        # pega o ultimo frame do emulador
         frame = self.obterFrame()
-        # trata a imagem
+
         frame = cv2.resize(frame, None, fx=0.25, fy=0.25, interpolation=cv2.INTER_NEAREST)
-        # frameTratado = visao.MegaMan.transformar(frame)
-        # passa para a IA para prever o proximo movimento
+        
+        cv2.imshow("Jogo", cv2.resize(frame, None, fx=8, fy=8, interpolation=cv2.INTER_NEAREST))
+        
         acao = inteligencia.modelo.predict(numpy.array([frame]), use_multiprocessing=True)
         classe = numpy.argmax(acao[0])
-        # pega o comando que o personagem precisa executar
+        
         print("Ação {:20.20} com {:06.2f}% de certeza\r".format(self.classes[classe], acao[0][classe]*100), end="")
         
         comando = self.comandos[classe].copy()
@@ -91,10 +91,6 @@ class Jogo:
             self.repeticoesA = 0
         # envia o comando para o emulador
         self._enviarComando(comando)
-        
-        frame = cv2.resize(frame, None, fx=4, fy=4, interpolation=cv2.INTER_NEAREST)
-        
-        cv2.imshow("Jogo", frame)
         
         if (cv2.waitKey(1) & 0xFF) == ord('q'):
             cv2.destroyAllWindows()
