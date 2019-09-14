@@ -30,8 +30,9 @@ class Treinamento:
         self.batch_size = kwargs.get("batch_size", 100)
         self.nome = kwargs.pop("nome")
         self.sprites = sprites
+        self._suffle = not kwargs.get("not_suffle", False)
         self._fimVideo = False
-        self._nthreads = 4
+        self._nthreads = kwargs.get("nthreads", 4)
         self._frameAnterior = None, -1
         self._s = [],[]
         self._log = open("logs/"+self.nome+".log", "a")
@@ -161,12 +162,12 @@ Para jogar use o comando:
                 batch_size=self.batch_size,
                 epochs=epochs, 
                 verbose=1, 
-                shuffle=True)
+                shuffle=self._suffle)
 
             self._atualizarLog(historico)
             
             atual = numpy.mean(historico.history["acc"])
-            treinar = ((atual <= 0.85) or ((atual - ultimo) > 0.002)) and (atual - ultimo) > 0
+            treinar = ((atual <= 0.80) or ((atual - ultimo) > 0.005))
             print("\033[31mVariação: ", (atual - ultimo), "\033[0;0m")
             ultimo = atual
 
@@ -179,19 +180,9 @@ Para jogar use o comando:
         preenchimento = "#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4))
         # imprime
         print(texto.format(preenchimento, progresso, statBatch), end="\r")
-        if self.exibir:
+        if self.exibir and len(self._s[0]) > 0:
             cv2.imshow("Treinamento", cv2.resize(self._s[0][-1], None, fx=8, fy=8, interpolation=cv2.INTER_NEAREST))
             cv2.waitKey(1)
-
-    def _exibirVisaoTreinamento(self, frame):
-        """Mostra a visão do treinamento"""
-        if self.exibir:
-            #* Comentado pois se tornou desnecessário
-            # progresso = self.estatisticas.progresso
-            # qualidade = self.estatisticas.qualidadeAtual
-            # self.visao.desenhar_infos(frame, progresso, qualidade)
-            frame = cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
-            cv2.imshow("Treinamento", frame)
 
 class Info:
     def __init__(self, **kwargs):
@@ -227,10 +218,10 @@ class Worker(Thread):
             # treina a rede com o frame anterior e o rótulo do frame atual
             # apenas nas transições
             temAnterior = not frameAnterior[0] is None
-            isTransicao = True #self._frameAnterior[1] != self.visao.rotulo
+            isTransicao = True #frameAnterior[1] != self.megaman.rotulo # True
             temEstadoAtual = self.megaman.rotulo != -1
             excecao = self.megaman.rotulo in (10, 11)
-            descSubida = False # self.visao.rotulo in (8, 9) and self._frameAnterior[1] in (8, 9)  
+            descSubida = False #self.megaman.rotulo in (8, 9) and frameAnterior[1] in (8, 9)  # False
 
             if temAnterior and isTransicao and temEstadoAtual and \
                 not excecao and not descSubida:

@@ -46,9 +46,15 @@ def uso():
     print("  --tempo:")
     print("       Exibe estatísticas sobre o tempo dos frames.")
     print("  --epochs=<int>:")
-    print("       Número de épocas para cada batch. Padrão: 50")
+    print("       Número de épocas para cada batch. Padrão: 50.")
     print("  --batch_size=<int>:")
-    print("       Quantidade de frames por batch. Padrão: 300")
+    print("       Quantidade de frames por batch. Padrão: 300.")
+    print("  --nthreads=<int>:")
+    print("       Quantidade de threads para a classificação do video.")
+    print("       Por padrão é 4.")
+    print("  --not_suffle:")
+    print("       Se deve misturar as imagens que são passadas para o treinamento.")
+    print("       Por padrão é verdadeiro.")
     print("")
     print("Opções modo Jogar:")
     print("  --room=<arquivo room>:")
@@ -83,10 +89,11 @@ def treinar(params):
         epochs=params.epochs,
         batch_size=params.batch_size,
         exibir=params.exibir,
-        nome=params.nome)
+        nome=params.nome,
+        nthreads=params.nthreads,
+        not_suffle=params.not_suffle)
     
     treino.iniciar()
-
 
 def jogar(params):
     """Verifica os parâmetros para jogar e

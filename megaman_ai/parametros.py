@@ -25,12 +25,14 @@ class Parametros:
     sequencia = "1,2,3,4,5,6,7,8"
     qualidade = False
     tempo = False
+    not_suffle = False
     room = "MegaMan3.nes"
     fceux = "/usr/games/fceux"
     fceux_script = "server.lua"
     nome = ""
     epochs = 50
     batch_size = 300
+    nthreads = 4
 
     def __init__(self, opts):
         self.parse(opts)
@@ -52,6 +54,7 @@ class Parametros:
         # converte valores
         self.epochs = int(self.epochs)
         self.batch_size = int(self.batch_size)
+        self.nthreads = int(self.nthreads)
 
     @staticmethod
     def getopts():
@@ -135,6 +138,11 @@ class Parametros:
             if not path.isfile(video):
                 print("Video {} não encontrado.".format(video))
                 tudoOk = False
+        
+        # Verifica a quantidade de Threads
+        if self.nthreads < 0:
+            print("Número de threads inválido.")
+            tudoOk = False
 
         return tudoOk
 
