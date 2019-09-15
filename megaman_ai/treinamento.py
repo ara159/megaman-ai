@@ -13,6 +13,7 @@ import os
 import time
 from datetime import datetime
 from threading import RLock, Thread, active_count
+from tensorflow.keras.preprocessing.sequence import TimeseriesGenerator
 
 from . import inteligencia, visao
 
@@ -37,6 +38,7 @@ class Treinamento:
         self._s = [],[]
         self._log = open("logs/"+self.nome+".log", "a")
         self._lock = RLock()
+        self._rnn = True
 
     def iniciar(self):
         """Inicia o treinamento em todos os videos"""
@@ -135,7 +137,10 @@ Para jogar use o comando:
             cv2.destroyAllWindows()
 
             if len(self._s[0]) > 0:
-                self._fit()
+                if self._rnn:
+                    self._fitRNN()
+                else:
+                    self._fit()
                 feitos += len(self._s[0])
                 # limpa o batch
                 self._s[0].clear()
@@ -170,7 +175,19 @@ Para jogar use o comando:
             treinar = ((atual <= 0.80) or ((atual - ultimo) > 0.005))
             print("\033[31mVariação: ", (atual - ultimo), "\033[0;0m")
             ultimo = atual
-
+    
+    def _fitRNN(self):
+        gerador = TimeseriesGenerator(
+            numpy.array(self._s[0])/255.0, 
+            numpy.array(self._s[1]), 
+            length=20)
+        historico = inteligencia.modelo.fit_generator(
+            gerador,
+            epochs=self.epochs,
+            shuffle=self._suffle,
+            verbose=1)
+        self._atualizarLog(historico)
+        
     def _exibirInfoTreinamento(self, total, feitos):
         """Print de informações sobre o andamento do treinamento"""
         # Progresso
@@ -180,9 +197,9 @@ Para jogar use o comando:
         preenchimento = "#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4))
         # imprime
         print(texto.format(preenchimento, progresso, statBatch), end="\r")
-        if self.exibir and len(self._s[0]) > 0:
-            cv2.imshow("Treinamento", cv2.resize(self._s[0][-1], None, fx=8, fy=8, interpolation=cv2.INTER_NEAREST))
-            cv2.waitKey(1)
+        # if self.exibir and len(self._s[0]) > 0:
+        #     cv2.imshow("Treinamento", cv2.resize(self._s[0][-1], None, fx=8, fy=8, interpolation=cv2.INTER_NEAREST))
+        #     cv2.waitKey(1)
 
 class Info:
     def __init__(self, **kwargs):
@@ -227,7 +244,7 @@ class Worker(Thread):
                 not excecao and not descSubida:
                 # coloca no dataset
                 self.lock.acquire()
-                self.lista[0].append(frameAnterior[0])
+                self.lista[0].append(frameAnterior[0].flatten())
                 self.lista[1].append(self.megaman.rotulo)
                 self.lock.release()
             

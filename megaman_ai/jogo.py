@@ -32,6 +32,7 @@ class Jogo:
         self._caminhoFrame = "/tmp/.megamanAI.screen"
         self._winScala = 2
         self.repeticoesA = 0
+        self.repeticoesB = 0
 
     def iniciar(self):
         # inicia o emulador
@@ -39,10 +40,9 @@ class Jogo:
         # conecta ao emulador
         self._conectar()
 
-        # enquanto o emulador estiver ativo E conectado
-        while self._emulador.isAlive() and self._conectado:
-            # executa a função jogar
-            self._jogar()
+        # executa a função jogar
+        self._jogar()
+        
         print("")
 
         # verifica se o emulador continua ativo (caso tenha dado algum erro com o servidor)
@@ -68,34 +68,57 @@ class Jogo:
 
     def _jogar(self):
         """ Joga o game"""
-        
-        frame = self.obterFrame()
+        mem = [numpy.zeros(3584) for _ in range(20-1)]
 
-        frame = cv2.resize(frame, None, fx=0.25, fy=0.25, interpolation=cv2.INTER_NEAREST)
-        
-        cv2.imshow("Jogo", cv2.resize(frame, None, fx=8, fy=8, interpolation=cv2.INTER_NEAREST))
-        
-        acao = inteligencia.modelo.predict(numpy.array([frame]), use_multiprocessing=True)
-        classe = numpy.argmax(acao[0])
-        
-        print("Ação {:20.20} com {:06.2f}% de certeza\r".format(self.classes[classe], acao[0][classe]*100), end="")
-        
-        comando = self.comandos[classe].copy()
-        # trata o problema do 'A' pressionado infinitamente
-        if "A" in comando:
-            self.repeticoesA += 1    
-            if self.repeticoesA > 20:
-                del comando["A"]
+        # enquanto o emulador estiver ativo E conectado
+        while self._emulador.isAlive() and self._conectado:
+
+            while len(mem) < 20:
+                frame = self.obterFrame()
+                if not frame is None:
+                    mem.append(cv2.resize(
+                        frame, 
+                        None, 
+                        fx=0.25, 
+                        fy=0.25, 
+                        interpolation=cv2.INTER_NEAREST).flatten())
+            
+            cv2.imshow("Jogo", cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST))
+
+            acao = inteligencia.modelo.predict(numpy.array([mem]), use_multiprocessing=True)
+            classe = numpy.argmax(acao[0])
+            
+            print("Ação {:20.20} com {:06.2f}% de certeza\r".format(self.classes[classe], acao[0][classe]*100), end="")
+            
+            comando = self.comandos[classe].copy()
+            # trata o problema do 'A' pressionado infinitamente
+            if "A" in comando:
+                self.repeticoesA += 1    
+                if self.repeticoesA > 20:
+                    del comando["A"]
+                    self.repeticoesA = 0
+            else:
                 self.repeticoesA = 0
-        else:
-            self.repeticoesA = 0
-        # envia o comando para o emulador
-        self._enviarComando(comando)
-        
-        if (cv2.waitKey(1) & 0xFF) == ord('q'):
-            cv2.destroyAllWindows()
-            self._emulador.join()
-    
+            
+            # trata o problema do 'A' pressionado infinitamente
+            if "B" in comando:
+                self.repeticoesB += 1    
+                if self.repeticoesB > 5:
+                    del comando["B"]
+                    self.repeticoesB = 0
+            else:
+                self.repeticoesB = 0
+            
+            
+            # envia o comando para o emulador
+            self._enviarComando(comando)
+            
+            if (cv2.waitKey(1) & 0xFF) == ord('q'):
+                cv2.destroyAllWindows() 
+                self._emulador.join()
+            
+            del mem[0]
+
     def _iniciarEmulador(self):
         """Inicia a thread do emulador com os parâmetros passados"""
 
