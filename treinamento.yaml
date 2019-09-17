@@ -1,0 +1,10 @@
+nome: "master"
+treinamento: True
+exibir: False
+sprites: "megaman.yaml"
+not_suffle: True
+batch_size: 210
+epochs: 30
+nthreads: 1
+time_steps: 200
+videos: ["videos/gravados/rafael.mp4"]

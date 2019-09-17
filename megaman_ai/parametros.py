@@ -21,8 +21,6 @@ class Parametros:
     exibir = False
     sprites = "megaman.yaml"
     ajuda = False
-    carregar_pre = False
-    sequencia = "1,2,3,4,5,6,7,8"
     qualidade = False
     tempo = False
     not_suffle = False
@@ -33,6 +31,8 @@ class Parametros:
     epochs = 50
     batch_size = 300
     nthreads = 4
+    config = ""
+    time_steps = 10
 
     def __init__(self, opts):
         self.parse(opts)
@@ -46,8 +46,6 @@ class Parametros:
             else:
                 setattr(self, parametro[2:], valor)
         
-        self.sequencia = set(map(int, self.sequencia.split(',')))
-        
         # Configura os valores extras de parâmetro
         self.videos = opts[1]
 
@@ -55,6 +53,7 @@ class Parametros:
         self.epochs = int(self.epochs)
         self.batch_size = int(self.batch_size)
         self.nthreads = int(self.nthreads)
+        self.time_steps = int(self.time_steps)
 
     @staticmethod
     def getopts():
@@ -183,18 +182,6 @@ class Parametros:
             print("Não foi o arquivo de script do fceux (servidor).".format(self.room))
             tudoOk = False
         
-        # Verifica tamanho da sequência
-        if not (len(self.sequencia) > 0 and len(self.sequencia) <= 8):
-            print("O tamanho da sequência é inválido. Tamanho correto é entre 1 e 8.")
-            tudoOk = False
-
-        # Verifica conteúdo da sequência
-        for k in self.sequencia:
-            if not k in range(1, 9): # Valor inconsistente
-                print("Valor {} em sequencia, fora do intervalo correto.".format(k), end="") 
-                print("Aceitos valores entre 1 e 8 sem repetição.")
-                tudoOk = False
-
         return tudoOk
 
 def parse():
@@ -205,4 +192,6 @@ def parse():
     args = argv[1:]
     opts = gnu_getopt(args, opts_curta, opts_longa)
     parametros = Parametros(opts)
+    if len(parametros.config) > 0 and path.exists(parametros.config):
+        parametros.__dict__ = yaml.load(open(parametros.config, "r").read())
     return parametros

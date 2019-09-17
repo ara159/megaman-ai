@@ -30,6 +30,10 @@ def uso():
     print("Opções Gerais:")
     print("  --ajuda:")
     print("       Exibe esta mensagem de ajuda.")
+    print("  --config=<caminho>")
+    print("       Caminho para um arquivo de configuração yaml.")
+    print("  --time_steps=<int>")
+    print("       Salto de tempo em frames.")
     print("  --nome=<nome inteligencia>:")
     print("       Caso a inteligencia exista ela é carregada.")
     print("       Caso não exista, será necessário cria-la, olhe o arquivo nova_ia.py.")
@@ -41,8 +45,6 @@ def uso():
     print("       Exibir saida da visão com estátisticas sobre o treinamento.")
     print("  --qualidade:")
     print("       Exibe informações sobre a qualidade de cada frame observado.")
-    print("  --carregar_pre:")
-    print("       Carrega um estado pré carregado no emulador.")
     print("  --tempo:")
     print("       Exibe estatísticas sobre o tempo dos frames.")
     print("  --epochs=<int>:")
@@ -59,10 +61,6 @@ def uso():
     print("Opções modo Jogar:")
     print("  --room=<arquivo room>:")
     print("       Arquivo de room do jogo. Padrão: ./MegaMan3.nes")
-    print("  --sequencia=<sequencia>:")
-    print("       (1,2,3,...8) Sequência de fases a ser seguida.")
-    print("       Números separados por vírgula. Caso seja omitido, será")
-    print("       sequencial de 1 a 8.")
     print("  --carregar-pre:")
     print("       Carrega um estado pré carregado do emulador. Padrão: False")
     print("  --fceux=<caminho>:")
@@ -91,6 +89,7 @@ def treinar(params):
         exibir=params.exibir,
         nome=params.nome,
         nthreads=params.nthreads,
+        time_steps=params.time_steps,
         not_suffle=params.not_suffle)
     
     treino.iniciar()
@@ -108,9 +107,8 @@ def jogar(params):
     jogar = jogo.Jogo(
         room = params.room,
         sprites = params.sprites,
-        sequencia = params.sequencia, 
-        carregar_pre = params.carregar_pre,
         fceux=params.fceux,
+        time_steps=params.time_steps,
         fceux_script=params.fceux_script)
     
     jogar.iniciar()

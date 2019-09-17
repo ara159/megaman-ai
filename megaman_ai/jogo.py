@@ -18,12 +18,10 @@ from . import inteligencia, visao
 class Jogo:
 
     def __init__(self, room, sprites, fceux="/usr/games/fceux", 
-            fceux_script="server.lua", sequencia=None, carregar_pre=False):
+            fceux_script="server.lua", carregar_pre=False, time_steps=10):
         self.room = room
         self.classes = self._getClasses(sprites)
         self.comandos = self._getComandos(sprites)
-        self.sequencia = sequencia
-        self.carregar_pre = carregar_pre
         self.fceux = fceux
         self.fceux_script = os.path.abspath(fceux_script)
         self._emulador = Thread(target=self._iniciarEmulador)
@@ -31,6 +29,7 @@ class Jogo:
         self._conectado = False
         self._caminhoFrame = "/tmp/.megamanAI.screen"
         self._winScala = 2
+        self._time_steps = time_steps
         self.repeticoesA = 0
         self.repeticoesB = 0
 
@@ -68,24 +67,22 @@ class Jogo:
 
     def _jogar(self):
         """ Joga o game"""
-        mem = [numpy.zeros(3584) for _ in range(20-1)]
+        mem = [numpy.zeros(896) for _ in range(self._time_steps-1)]
 
         # enquanto o emulador estiver ativo E conectado
         while self._emulador.isAlive() and self._conectado:
 
-            while len(mem) < 20:
+            while len(mem) < self._time_steps:
                 frame = self.obterFrame()
                 if not frame is None:
-                    mem.append(cv2.resize(
-                        frame, 
-                        None, 
-                        fx=0.25, 
-                        fy=0.25, 
-                        interpolation=cv2.INTER_NEAREST).flatten())
+                    frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+                    frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+                    frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+                    mem.append(frame.flatten())
             
-            cv2.imshow("Jogo", cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST))
+            cv2.imshow("Jogo", cv2.resize(frame, None, fx=8, fy=8, interpolation=cv2.INTER_NEAREST))
 
-            acao = inteligencia.modelo.predict(numpy.array([mem]), use_multiprocessing=True)
+            acao = inteligencia.modelo.predict(numpy.array([mem]))
             classe = numpy.argmax(acao[0])
             
             print("Ação {:20.20} com {:06.2f}% de certeza\r".format(self.classes[classe], acao[0][classe]*100), end="")

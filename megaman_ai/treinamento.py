@@ -37,8 +37,10 @@ class Treinamento:
         self._frameAnterior = None, -1
         self._s = [],[]
         self._log = open("logs/"+self.nome+".log", "a")
-        self._lock = RLock()
-        self._rnn = True
+        self._lock_lista = RLock()
+        self._rnn = True # Parametrizar
+        self._iterativo = False # Parametrizar
+        self._time_steps = kwargs.get("time_steps", 10)
 
     def iniciar(self):
         """Inicia o treinamento em todos os videos"""
@@ -107,32 +109,33 @@ Para jogar use o comando:
     
     def _iniciarClassificacao(self, videoCapture):
         temporario = []
-        for i in range(self._nthreads):
-            for _ in range(int(self.batch_size/self._nthreads)):
-                frame = videoCapture.read()[1]
-                if not frame is None:
-                    temporario.append(frame)
-                else:
-                    self._fimVideo = True
-                    break
-            worker = Worker(temporario.copy(), self.sprites, self._s, self._lock)
-            worker.start()
-            print("Thread {} iniciada com {} frames".format(i+1, len(temporario)))
-            temporario.clear()
+        while len(self._s[0]) < self.batch_size:
+            for i in range(self._nthreads):
+                for _ in range(50):
+                    frame = videoCapture.read()[1]
+                    if not frame is None:
+                        temporario.append(frame)
+                    else:
+                        self._fimVideo = True
+                        break
+                worker = Worker(temporario.copy(), self.sprites, self._s, self._lock_lista)
+                worker.start()
+                print("Thread {} iniciada com {} frames".format(i+1, len(temporario)))
+                temporario.clear()
+
+            while active_count() > 1:
+                self._exibirInfoTreinamento(self.framesTotal, self.feitos)
+
 
     def _treinar(self, videoCapture):
         """Executa o treinamento em um video"""
-        
-        framesTotal = int(videoCapture.get(cv2.CAP_PROP_FRAME_COUNT))
-        feitos = 0
+        self.framesTotal = int(videoCapture.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.feitos = 0
 
         # Lê o video até o fim
         while not self._fimVideo:
             
             self._iniciarClassificacao(videoCapture)
-
-            while active_count() > 1:
-                self._exibirInfoTreinamento(framesTotal, feitos)
 
             cv2.destroyAllWindows()
 
@@ -141,7 +144,7 @@ Para jogar use o comando:
                     self._fitRNN()
                 else:
                     self._fit()
-                feitos += len(self._s[0])
+                self.feitos += len(self._s[0])
                 # limpa o batch
                 self._s[0].clear()
                 self._s[1].clear()
@@ -177,16 +180,26 @@ Para jogar use o comando:
             ultimo = atual
     
     def _fitRNN(self):
-        gerador = TimeseriesGenerator(
-            numpy.array(self._s[0])/255.0, 
-            numpy.array(self._s[1]), 
-            length=20)
-        historico = inteligencia.modelo.fit_generator(
-            gerador,
-            epochs=self.epochs,
-            shuffle=self._suffle,
-            verbose=1)
-        self._atualizarLog(historico)
+        treinar = True
+        while treinar:
+            gerador = TimeseriesGenerator(
+                numpy.array(self._s[0][:self.batch_size])/255.0, 
+                numpy.array(self._s[1][:self.batch_size]), 
+                length=self._time_steps)
+            historico = inteligencia.modelo.fit_generator(
+                gerador,
+                epochs=self.epochs,
+                shuffle=self._suffle,
+                verbose=1)
+            self._atualizarLog(historico)
+
+            if self._iterativo:
+                try:
+                    treinar = input("Continuar (s/n)? ") == 's'
+                except:
+                    treinar = False
+            else:
+                treinar = False
         
     def _exibirInfoTreinamento(self, total, feitos):
         """Print de informações sobre o andamento do treinamento"""
@@ -210,28 +223,29 @@ class Info:
 
 class Worker(Thread):
 
-    def __init__(self, frames, sprites, lista, lock, **kwargs):
+    def __init__(self, frames, sprites, lista, lock_lista, **kwargs):
         Thread.__init__(self)
         self.megaman = visao.MegaMan(sprites)
         self.frames = frames
         self.lista = lista
-        self.lock = lock
+        self.lock_lista = lock_lista
         self.temporario = [],[]
 
     def run(self):
         frameAnterior = (None, -1)
         
-        for frame in self.frames:
-            
+        while len(self.frames) > 0:
+            frame = self.frames[0]
             frame = cv2.resize(frame, (256, 240))[:-16,:]
             
             # atualizar o estado do objeto megaman usando o frame
             self.megaman.atualizar(self.megaman.transformar(frame), 20)
             
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            
-            frame = cv2.resize(frame, None, fx=0.25, fy=0.25, interpolation=cv2.INTER_NEAREST)
-            
+            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+
             # treina a rede com o frame anterior e o rótulo do frame atual
             # apenas nas transições
             temAnterior = not frameAnterior[0] is None
@@ -243,10 +257,11 @@ class Worker(Thread):
             if temAnterior and isTransicao and temEstadoAtual and \
                 not excecao and not descSubida:
                 # coloca no dataset
-                self.lock.acquire()
+                self.lock_lista.acquire()
                 self.lista[0].append(frameAnterior[0].flatten())
                 self.lista[1].append(self.megaman.rotulo)
-                self.lock.release()
+                self.lock_lista.release()
             
             # atualiza o frame anterior
             frameAnterior = (frame, self.megaman.rotulo)
+            del self.frames[0]
