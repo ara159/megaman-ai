@@ -35,12 +35,15 @@ class Treinamento:
         self._fimVideo = False
         self._nthreads = kwargs.get("nthreads", 4)
         self._frameAnterior = None, -1
-        self._s = [],[]
+        self._data_set = [],[]
         self._log = open("logs/"+self.nome+".log", "a")
-        self._lock_lista = RLock()
         self._rnn = True # Parametrizar
         self._iterativo = False # Parametrizar
         self._time_steps = kwargs.get("time_steps", 10)
+        self._lock_video = RLock()
+        self._frames_thread = int(self.batch_size/self._nthreads)
+        self._status_vermelho = "\033[;1m\033[1;31m*\033[0;0m"
+        self._status_amarelo = "\033[;1m\033[1;93m!\033[0;0m"
 
     def iniciar(self):
         """Inicia o treinamento em todos os videos"""
@@ -50,15 +53,16 @@ class Treinamento:
         for video in self.videos:
 
             # Abre o video
-            videoCapture = cv2.VideoCapture(video)
+            self._video = cv2.VideoCapture(video)
 
             # Exibe algumas informações antes do inicio do treinamento
             self._exibirInfosInicioVideo(video)
 
             try:
                 # Chama a função de treinamento para o video atual
-                self._treinar(videoCapture)
+                self._treinar()
                 print("\n")
+            
             # Trata o caso de iterrupção pelo usuário via teclado
             # Para salvar o progresso do video
             except KeyboardInterrupt:
@@ -75,7 +79,7 @@ class Treinamento:
 
     def _exibirInfosFimVideo(self, video):
         """Exibe algumas informações antes do treinamento com o video"""
-        print("Fim de treinamento com o vídeo: {}".format(video))
+        print("[{}] Fim de treinamento com o vídeo: {}".format(self._status_amarelo, video))
 
     def _exibirInfosInicioVideo(self, video):
         """Exibe algumas informações depois do treinamento com o video"""
@@ -94,7 +98,9 @@ class Treinamento:
     Videos: {}
     Batch Size: {}
     Epochs: {}
-    """.format(self.videos, self.batch_size, self.epochs))
+    Threads: {}
+    Frames por Thread: {}
+    """.format(self.videos, self.batch_size, self.epochs, self._nthreads, self._frames_thread))
 
     def _exibirInfoFimTreino(self):
         print("""
@@ -107,54 +113,113 @@ Para jogar use o comando:
     sudo python3 -m megaman_ai --nome={}
     """.format(self.nome, inteligencia._caminho, self.nome))
     
-    def _iniciarClassificacao(self, videoCapture):
-        temporario = []
-        while len(self._s[0]) < self.batch_size:
-            for i in range(self._nthreads):
-                for _ in range(50):
-                    frame = videoCapture.read()[1]
-                    if not frame is None:
-                        temporario.append(frame)
-                    else:
-                        self._fimVideo = True
-                        break
-                worker = Worker(temporario.copy(), self.sprites, self._s, self._lock_lista)
-                worker.start()
-                print("Thread {} iniciada com {} frames".format(i+1, len(temporario)))
-                temporario.clear()
+    def _iniciarClassificacao(self):
+        frame_set = []
+        feitos = 0
+        threads = []
 
-            while active_count() > 1:
-                self._exibirInfoTreinamento(self.framesTotal, self.feitos)
+        print("[{}] Iniciando classificação".format(self._status_vermelho))
 
+        for i in range(self._nthreads):
+            recipiente = [],[]
+            frame_set.append(recipiente)
+            args = (recipiente, i+1)
+            worker = Thread(target=self._classificar, args=args)
+            worker.start()
+            threads.append(worker)
 
-    def _treinar(self, videoCapture):
+        vivas = self._nthreads
+        for worker in threads:
+            if worker.is_alive(): 
+                worker.join()
+        
+        self._data_set = [[],[]]
+        for recipiente in frame_set:
+            self._data_set[0].extend(recipiente[0])
+            self._data_set[1].extend(recipiente[1])
+        
+        print("[{}] Todas as Threads Finalizadas! Iniciando Treinamento.".format(self._status_amarelo))
+    
+    def _classificar(self, recipiente, numero):
+        frameAnterior = (None, -1)
+        vis = visao.MegaMan(self.sprites)
+        porcentagem = 0
+        parte_100 = int(self._frames_thread * 0.1)
+        
+        print("[{}] Thread {} iniciada.".format(self._status_vermelho, numero))
+
+        while len(recipiente[0]) < self._frames_thread:
+            with self._lock_video:
+                frame = self._video.read()[1]
+
+            if frame is None:
+                return
+
+            frame = cv2.resize(frame, (256, 240))[:-16,:]
+            
+            # atualizar o estado do objeto megaman usando o frame
+            vis.atualizar(vis.transformar(frame), 20)
+            
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+
+            # treina a rede com o frame anterior e o rótulo do frame atual
+            # apenas nas transições
+            temAnterior = not frameAnterior[0] is None
+            isTransicao = True #frameAnterior[1] != self.megaman.rotulo # True
+            temEstadoAtual = vis.rotulo != -1
+            excecao = vis.rotulo in (10, 11)
+            descSubida = False #self.megaman.rotulo in (8, 9) and frameAnterior[1] in (8, 9)  # False
+
+            if temAnterior and isTransicao and temEstadoAtual and \
+                not excecao and not descSubida:
+                # coloca no dataset
+                recipiente[0].append(frameAnterior[0].flatten())
+                recipiente[1].append(vis.rotulo)
+                
+            # atualiza o frame anterior
+            frameAnterior = (frame, vis.rotulo)
+
+            if self._nthreads > 1:
+                if len(recipiente[0]) % parte_100 == 0:
+                    print("[{}] Thread {} {}%".format(self._status_vermelho, numero, porcentagem * 10))
+                    porcentagem += 1
+            else:
+                self._exibirInfoTreinamento(self.batch_size, len(recipiente[0]))
+        
+        print("[{}] Fim classificação Thread {}.".format(self._status_vermelho, numero))
+        
+    def _treinar(self):
         """Executa o treinamento em um video"""
-        self.framesTotal = int(videoCapture.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.framesTotal = int(self._video.get(cv2.CAP_PROP_FRAME_COUNT))
         self.feitos = 0
 
         # Lê o video até o fim
         while not self._fimVideo:
             
-            self._iniciarClassificacao(videoCapture)
+            self._iniciarClassificacao()
 
-            cv2.destroyAllWindows()
-
-            if len(self._s[0]) > 0:
+            if len(self._data_set[0]) > 0:
                 if self._rnn:
                     self._fitRNN()
                 else:
                     self._fit()
-                self.feitos += len(self._s[0])
+                self.feitos += len(self._data_set[0])
+                
+                print("[{}] Fim do treinamento. {}% Completo".format(self._status_amarelo, int((self.feitos/self.framesTotal)*100)))
+
                 # limpa o batch
-                self._s[0].clear()
-                self._s[1].clear()
+                self._data_set[0].clear()
+                self._data_set[1].clear()
 
     def _atualizarLog(self, historico):
         info = Info(
             acc = list(map(float, historico.history['acc'])), 
             loss = list(map(float, historico.history['loss'])),
-            rotulos = self._s[1],
-            tam_batch = len(self._s[0]))
+            rotulos = self._data_set[1],
+            tam_batch = len(self._data_set[0]))
         
         self._log.write(str(info))
         
@@ -165,8 +230,8 @@ Para jogar use o comando:
 
         while treinar:
             historico = inteligencia.modelo.fit(
-                numpy.array(self._s[0])/255.0, 
-                numpy.array(self._s[1]),
+                numpy.array(self._data_set[0])/255.0, 
+                numpy.array(self._data_set[1]),
                 batch_size=self.batch_size,
                 epochs=epochs, 
                 verbose=1, 
@@ -183,8 +248,8 @@ Para jogar use o comando:
         treinar = True
         while treinar:
             gerador = TimeseriesGenerator(
-                numpy.array(self._s[0][:self.batch_size])/255.0, 
-                numpy.array(self._s[1][:self.batch_size]), 
+                numpy.array(self._data_set[0][:self.batch_size])/255.0, 
+                numpy.array(self._data_set[1][:self.batch_size]), 
                 length=self._time_steps)
             historico = inteligencia.modelo.fit_generator(
                 gerador,
@@ -203,65 +268,16 @@ Para jogar use o comando:
         
     def _exibirInfoTreinamento(self, total, feitos):
         """Print de informações sobre o andamento do treinamento"""
-        # Progresso
-        progresso = int(((len(self._s[0])+feitos)/total)*100)
-        texto = "Progresso: [{}] {}% {}"
-        statBatch = "{}/{}".format(len(self._s[0]), self.batch_size)
-        preenchimento = "#"*int(progresso/4)+">"+"."*(int(100/4)-int(progresso/4))
-        # imprime
-        print(texto.format(preenchimento, progresso, statBatch), end="\r")
-        # if self.exibir and len(self._s[0]) > 0:
-        #     cv2.imshow("Treinamento", cv2.resize(self._s[0][-1], None, fx=8, fy=8, interpolation=cv2.INTER_NEAREST))
-        #     cv2.waitKey(1)
-
+        progresso = int((feitos/total)*100)
+        texto = "\rProgresso: [{}] {}% {}"
+        statBatch = "{}/{}".format(feitos, total)
+        preenchimento = "="*int(progresso/4)+"\033[1;94m>\033[0;0m"+"."*(int(100/4)-int(progresso/4))
+        print(texto.format(preenchimento, progresso, statBatch), end="")
+        if progresso == 100: print("")
+        
 class Info:
     def __init__(self, **kwargs):
         self.__dict__ = kwargs
     
     def __str__(self):
         return yaml.dump({datetime.now().isoformat(): self.__dict__})
-
-class Worker(Thread):
-
-    def __init__(self, frames, sprites, lista, lock_lista, **kwargs):
-        Thread.__init__(self)
-        self.megaman = visao.MegaMan(sprites)
-        self.frames = frames
-        self.lista = lista
-        self.lock_lista = lock_lista
-        self.temporario = [],[]
-
-    def run(self):
-        frameAnterior = (None, -1)
-        
-        while len(self.frames) > 0:
-            frame = self.frames[0]
-            frame = cv2.resize(frame, (256, 240))[:-16,:]
-            
-            # atualizar o estado do objeto megaman usando o frame
-            self.megaman.atualizar(self.megaman.transformar(frame), 20)
-            
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
-            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
-            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
-
-            # treina a rede com o frame anterior e o rótulo do frame atual
-            # apenas nas transições
-            temAnterior = not frameAnterior[0] is None
-            isTransicao = True #frameAnterior[1] != self.megaman.rotulo # True
-            temEstadoAtual = self.megaman.rotulo != -1
-            excecao = self.megaman.rotulo in (10, 11)
-            descSubida = False #self.megaman.rotulo in (8, 9) and frameAnterior[1] in (8, 9)  # False
-
-            if temAnterior and isTransicao and temEstadoAtual and \
-                not excecao and not descSubida:
-                # coloca no dataset
-                self.lock_lista.acquire()
-                self.lista[0].append(frameAnterior[0].flatten())
-                self.lista[1].append(self.megaman.rotulo)
-                self.lock_lista.release()
-            
-            # atualiza o frame anterior
-            frameAnterior = (frame, self.megaman.rotulo)
-            del self.frames[0]
