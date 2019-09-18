@@ -84,7 +84,7 @@ class MegaMan:
                     self.posicao = (self.posicao[0]-self.sobra+posicao[0], self.posicao[1]-self.sobra+posicao[1]) 
             else:
                 self.estado = None
-                self.rotulo = -1
+                self.rotulo = 0
                 self.posicao = None
         return melhor
     

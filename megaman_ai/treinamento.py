@@ -161,20 +161,17 @@ Para jogar use o comando:
             vis.atualizar(vis.transformar(frame), 20)
             
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
-            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
-            frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+
+            for s in (0.5, 0.5, 0.5, 0.75):
+                frame = cv2.resize(frame, None, fx=s, fy=s, interpolation=cv2.INTER_BITS)
+            frame[frame <= 40] = 0
+            frame = cv2.blur(frame, (2,2))
 
             # treina a rede com o frame anterior e o rótulo do frame atual
             # apenas nas transições
             temAnterior = not frameAnterior[0] is None
-            isTransicao = True #frameAnterior[1] != self.megaman.rotulo # True
-            temEstadoAtual = vis.rotulo != -1
-            excecao = vis.rotulo in (10, 11)
-            descSubida = False #self.megaman.rotulo in (8, 9) and frameAnterior[1] in (8, 9)  # False
-
-            if temAnterior and isTransicao and temEstadoAtual and \
-                not excecao and not descSubida:
+            
+            if temAnterior:
                 # coloca no dataset
                 recipiente[0].append(frameAnterior[0].flatten())
                 recipiente[1].append(vis.rotulo)
