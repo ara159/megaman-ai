@@ -245,9 +245,10 @@ Para jogar use o comando:
         treinar = True
         while treinar:
             gerador = TimeseriesGenerator(
-                numpy.array(self._data_set[0][:self.batch_size])/255.0, 
+                numpy.array(self._data_set[0][:self.batch_size]), 
                 numpy.array(self._data_set[1][:self.batch_size]), 
-                length=self._time_steps)
+                length=self._time_steps,
+                batch_size=int(self._time_steps/2))
             historico = inteligencia.modelo.fit_generator(
                 gerador,
                 epochs=self.epochs,
