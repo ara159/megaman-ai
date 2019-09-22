@@ -1,7 +1,7 @@
 from os import path
 
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 # Variáveis globais
 _caminho = "modelos/" # caminho do arquivo modelo

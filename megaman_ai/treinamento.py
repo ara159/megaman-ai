@@ -16,6 +16,7 @@ from threading import RLock, Thread, active_count
 from tensorflow.keras.preprocessing.sequence import TimeseriesGenerator
 
 from . import inteligencia, visao
+from .comuns import sttinf, sttwrn
 
 class Treinamento:
     """Armazena informações sobre uma instancia de treinamento
@@ -31,9 +32,8 @@ class Treinamento:
         self.batch_size = kwargs.get("batch_size", 100)
         self.nome = kwargs.pop("nome")
         self.sprites = sprites
-        self._suffle = not kwargs.get("not_suffle", False)
-        self._fimVideo = False
-        self._nthreads = kwargs.get("nthreads", 4)
+        self._suffle = not kwargs.get("not_suffle", True)
+        self._nthreads = kwargs.get("nthreads", 1)
         self._frameAnterior = None, -1
         self._data_set = [],[]
         self._log = open("logs/"+self.nome+".log", "a")
@@ -42,8 +42,6 @@ class Treinamento:
         self._time_steps = kwargs.get("time_steps", 10)
         self._lock_video = RLock()
         self._frames_thread = int(self.batch_size/self._nthreads)
-        self._status_vermelho = "\033[;1m\033[1;31m*\033[0;0m"
-        self._status_amarelo = "\033[;1m\033[1;93m!\033[0;0m"
 
     def iniciar(self):
         """Inicia o treinamento em todos os videos"""
@@ -61,12 +59,11 @@ class Treinamento:
             try:
                 # Chama a função de treinamento para o video atual
                 self._treinar()
-                print("\n")
             
             # Trata o caso de iterrupção pelo usuário via teclado
             # Para salvar o progresso do video
             except KeyboardInterrupt:
-                print("Iterrompido pelo usuário.")
+                print(" "*150, end="\r")
                 
 
             # Exibe informações no fim do treinamento
@@ -75,11 +72,13 @@ class Treinamento:
             # Salva modelo
             inteligencia.salvar()
         
-        self._exibirInfoFimTreino()
-
     def _exibirInfosFimVideo(self, video):
         """Exibe algumas informações antes do treinamento com o video"""
-        print("[{}] Fim de treinamento com o vídeo: {}".format(self._status_amarelo, video))
+        print("[{}] Fim de treinamento com o vídeo {}. Feitos: {}/{}".format(
+                sttwrn, 
+                video, 
+                self.feitos, 
+                self.framesTotal))
 
     def _exibirInfosInicioVideo(self, video):
         """Exibe algumas informações depois do treinamento com o video"""
@@ -101,24 +100,13 @@ class Treinamento:
     Threads: {}
     Frames por Thread: {}
     """.format(self.videos, self.batch_size, self.epochs, self._nthreads, self._frames_thread))
-
-    def _exibirInfoFimTreino(self):
-        print("""
-Treinamento finalizado com sucesso!
-
-Arquivo de log: "logs/{}.log"
-Modelo: "{}"
-
-Para jogar use o comando: 
-    sudo python3 -m megaman_ai --nome={}
-    """.format(self.nome, inteligencia._caminho, self.nome))
     
     def _iniciarClassificacao(self):
         frame_set = []
         feitos = 0
         threads = []
 
-        print("[{}] Iniciando classificação".format(self._status_vermelho))
+        print("[{}] Iniciando classificação".format(sttinf))
 
         for i in range(self._nthreads):
             recipiente = [],[]
@@ -132,13 +120,14 @@ Para jogar use o comando:
         for worker in threads:
             if worker.is_alive(): 
                 worker.join()
+        threads.clear()
         
         self._data_set = [[],[]]
         for recipiente in frame_set:
             self._data_set[0].extend(recipiente[0])
             self._data_set[1].extend(recipiente[1])
         
-        print("[{}] Todas as Threads Finalizadas! Iniciando Treinamento.".format(self._status_amarelo))
+        print("[{}] Todas as Threads Finalizadas! Iniciando Treinamento.".format(sttwrn))
     
     def _classificar(self, recipiente, numero):
         frameAnterior = (None, -1)
@@ -146,12 +135,13 @@ Para jogar use o comando:
         porcentagem = 0
         parte_100 = int(self._frames_thread * 0.1)
         
-        print("[{}] Thread {} iniciada.".format(self._status_vermelho, numero))
+        print("[{}] Thread {} iniciada.".format(sttinf, numero))
 
         while len(recipiente[0]) < self._frames_thread:
-            with self._lock_video:
-                frame = self._video.read()[1]
-
+            self._lock_video.acquire()
+            frame = self._video.read()[1]
+            self._lock_video.release()
+            
             if frame is None:
                 return
 
@@ -162,10 +152,9 @@ Para jogar use o comando:
             
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-            for s in (0.5, 0.5, 0.5, 0.75):
+            for s in (0.5, 0.5, 0.75):
                 frame = cv2.resize(frame, None, fx=s, fy=s, interpolation=cv2.INTER_BITS)
             frame[frame <= 40] = 0
-            frame = cv2.blur(frame, (2,2))
 
             # treina a rede com o frame anterior e o rótulo do frame atual
             # apenas nas transições
@@ -181,12 +170,12 @@ Para jogar use o comando:
 
             if self._nthreads > 1:
                 if len(recipiente[0]) % parte_100 == 0:
-                    print("[{}] Thread {} {}%".format(self._status_vermelho, numero, porcentagem * 10))
+                    print("[{}] Thread {} {}%".format(sttinf, numero, porcentagem * 10))
                     porcentagem += 1
             else:
                 self._exibirInfoTreinamento(self.batch_size, len(recipiente[0]))
         
-        print("[{}] Fim classificação Thread {}.".format(self._status_vermelho, numero))
+        print("[{}] Fim classificação Thread {}.".format(sttinf, numero))
         
     def _treinar(self):
         """Executa o treinamento em um video"""
@@ -194,7 +183,11 @@ Para jogar use o comando:
         self.feitos = 0
 
         # Lê o video até o fim
-        while not self._fimVideo:
+        while True:
+            
+            if not ((self.framesTotal - self.feitos) >= self.batch_size):
+                print("[{}] Não tem frames suficientes para completar o batch!".format(sttinf))
+                break
             
             self._iniciarClassificacao()
 
@@ -205,15 +198,15 @@ Para jogar use o comando:
                     self._fit()
                 self.feitos += len(self._data_set[0])
                 
-                print("[{}] Fim do treinamento. {}% Completo".format(self._status_amarelo, int((self.feitos/self.framesTotal)*100)))
+                print("[{}] Fim do treinamento do batch. {}% Completo".format(sttwrn, int((self.feitos/self.framesTotal)*100)))
 
                 # limpa o batch
                 self._data_set[0].clear()
                 self._data_set[1].clear()
-
+        
     def _atualizarLog(self, historico):
         info = Info(
-            acc = list(map(float, historico.history['acc'])), 
+            acc = list(map(float, historico.history['accuracy'])), 
             loss = list(map(float, historico.history['loss'])),
             rotulos = self._data_set[1],
             tam_batch = len(self._data_set[0]))
@@ -229,7 +222,7 @@ Para jogar use o comando:
             historico = inteligencia.modelo.fit(
                 numpy.array(self._data_set[0])/255.0, 
                 numpy.array(self._data_set[1]),
-                batch_size=self.batch_size,
+                batch_size=100,
                 epochs=epochs, 
                 verbose=1, 
                 shuffle=self._suffle)
@@ -245,10 +238,10 @@ Para jogar use o comando:
         treinar = True
         while treinar:
             gerador = TimeseriesGenerator(
-                numpy.array(self._data_set[0][:self.batch_size]), 
+                numpy.array(self._data_set[0][:self.batch_size])/255.0, 
                 numpy.array(self._data_set[1][:self.batch_size]), 
                 length=self._time_steps,
-                batch_size=int(self._time_steps/2))
+                batch_size=100)
             historico = inteligencia.modelo.fit_generator(
                 gerador,
                 epochs=self.epochs,

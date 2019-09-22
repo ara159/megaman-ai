@@ -30,12 +30,9 @@ class Parametros:
     nome = ""
     epochs = 50
     batch_size = 300
-    nthreads = 4
+    nthreads = 1
     config = ""
     time_steps = 10
-
-    def __init__(self, opts):
-        self.parse(opts)
 
     def parse(self, opts):
         """Preenche o objeto com as opções recebidas"""
@@ -47,7 +44,8 @@ class Parametros:
                 setattr(self, parametro[2:], valor)
         
         # Configura os valores extras de parâmetro
-        self.videos = opts[1]
+        if len(opts[1]) > 0:
+            self.videos = opts[1]
 
         # converte valores
         self.epochs = int(self.epochs)
@@ -103,7 +101,7 @@ class Parametros:
 
         # Abre o arquivo sprites como yaml
         try:
-            self.sprites = yaml.load(open(self.sprites).read())
+            self.sprites = yaml.full_load(open(self.sprites).read())
         except:
             print("Não foi possível abrir o arquivo {} como yaml.".format(self.sprites), end="")
             print("Verifique se a sintaxe está correta.")
@@ -191,7 +189,9 @@ def parse():
     opts_longa = Parametros.getopts()
     args = argv[1:]
     opts = gnu_getopt(args, opts_curta, opts_longa)
-    parametros = Parametros(opts)
+    parametros = Parametros()
+    parametros.parse(opts)
     if len(parametros.config) > 0 and path.exists(parametros.config):
-        parametros.__dict__ = yaml.load(open(parametros.config, "r").read())
+        parametros.__dict__ = yaml.full_load(open(parametros.config, "r").read())
+        parametros.parse(opts)
     return parametros

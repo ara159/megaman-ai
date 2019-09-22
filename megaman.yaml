@@ -52,6 +52,7 @@ estados:
     sprites:
       - "11"
     comando:
+      - A
 
   disparando_parado:
     sprites:
