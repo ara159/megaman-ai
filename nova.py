@@ -10,10 +10,12 @@ from os import environ
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-print("[*] Criando nova rede")
+print("[*] Criando nova rede recorrente")
+print("[?] Time steps: ", end="")
+steps = int(input())
 
 modelo = keras.Sequential([
-        keras.layers.LSTM(1000, input_shape=(5, 2016), return_sequences=True),
+        keras.layers.LSTM(1000, input_shape=(steps, 2016), return_sequences=True),
         keras.layers.Dropout(0.1),
         keras.layers.LSTM(500),
         keras.layers.Dropout(0.1),

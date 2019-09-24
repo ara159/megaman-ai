@@ -17,19 +17,19 @@ from . import inteligencia, visao
 
 class Jogo:
 
-    def __init__(self, room, sprites, fceux="/usr/games/fceux", 
-            fceux_script="server.lua", carregar_pre=False, time_steps=10):
+    def __init__(self, room, sprites, time_steps, **kwargs):
         self.room = room
         self.classes = self._getClasses(sprites)
         self.comandos = self._getComandos(sprites)
-        self.fceux = fceux
-        self.fceux_script = os.path.abspath(fceux_script)
+        self.fceux = kwargs.get("fceux", "/usr/games/fceux")
+        script_lua = kwargs.get("fceux_script", "lua/server.lua")
+        self.fceux_script = os.path.abspath(script_lua)
+        self.time_steps = time_steps
         self._emulador = Thread(target=self._iniciarEmulador)
         self._conexao = None
         self._conectado = False
         self._caminhoFrame = "/tmp/.megamanAI.screen"
         self._winScala = 2
-        self._time_steps = time_steps
         self.repeticoesA = 0
         self.repeticoesB = 0
 
@@ -73,12 +73,12 @@ class Jogo:
 
     def _jogar(self):
         """ Joga o game"""
-        mem = [numpy.zeros(2016) for _ in range(self._time_steps-1)]
+        mem = [numpy.zeros(2016) for _ in range(self.time_steps-1)]
 
         # enquanto o emulador estiver ativo E conectado
         while self._emulador.isAlive() and self._conectado:
 
-            while len(mem) < self._time_steps:
+            while len(mem) < self.time_steps:
                 frame = self.obterFrame()
                 
                 cv2.imshow("Jogo", cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST))

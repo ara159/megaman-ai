@@ -25,23 +25,21 @@ class Treinamento:
     def __init__(self, videos, sprites, **kwargs):
         self.videos = videos
         self.visao = visao.MegaMan(sprites)
-        self.tempo = kwargs.get("tempo", False)
-        self.exibir = kwargs.get("exibir", False)
-        self.qualidade = kwargs.get("qualidade", False)
         self.epochs = kwargs.get("epochs", 50)
         self.batch_size = kwargs.get("batch_size", 100)
+        self.frames = kwargs.get("frames", 1000)
         self.nome = kwargs.pop("nome")
         self.sprites = sprites
-        self._suffle = not kwargs.get("not_suffle", True)
-        self._nthreads = kwargs.get("nthreads", 1)
+        self.suffle = kwargs.get("suffle", True)
+        self.nthreads = kwargs.get("nthreads", 1)
+        self.time_steps = kwargs.get("time_steps", 10)
         self._frameAnterior = None, -1
         self._data_set = [],[]
-        self._log = open("logs/"+self.nome+".log", "a")
+        self._log = open("logs/{}.log".format(self.nome), "a")
         self._rnn = True # Parametrizar
         self._iterativo = False # Parametrizar
-        self._time_steps = kwargs.get("time_steps", 10)
         self._lock_video = RLock()
-        self._frames_thread = int(self.batch_size/self._nthreads)
+        self._frames_thread = int(self.frames/self.nthreads)
 
     def iniciar(self):
         """Inicia o treinamento em todos os videos"""
@@ -93,13 +91,14 @@ class Treinamento:
  |_|  |_|\___|\__, |\__,_|_|  |_|\__,_|_| |_| /_/   \_\___|
               |___/                                        
     
-    Iniciando treinamento... 
-    Videos: {}
-    Batch Size: {}
+    Nome IA: {}
     Epochs: {}
+    Batch Size: {}
     Threads: {}
-    Frames por Thread: {}
-    """.format(self.videos, self.batch_size, self.epochs, self._nthreads, self._frames_thread))
+    Frames/fit: {}
+    Videos: {}
+    """.format(self.nome, self.epochs, self.batch_size, 
+        self.nthreads, self.frames, self.videos))
     
     def _iniciarClassificacao(self):
         frame_set = []
@@ -108,7 +107,7 @@ class Treinamento:
 
         print("[{}] Iniciando classificação".format(sttinf))
 
-        for i in range(self._nthreads):
+        for i in range(self.nthreads):
             recipiente = [],[]
             frame_set.append(recipiente)
             args = (recipiente, i+1)
@@ -116,7 +115,7 @@ class Treinamento:
             worker.start()
             threads.append(worker)
 
-        vivas = self._nthreads
+        vivas = self.nthreads
         for worker in threads:
             if worker.is_alive(): 
                 worker.join()
@@ -168,12 +167,12 @@ class Treinamento:
             # atualiza o frame anterior
             frameAnterior = (frame, vis.rotulo)
 
-            if self._nthreads > 1:
+            if self.nthreads > 1:
                 if len(recipiente[0]) % parte_100 == 0:
                     print("[{}] Thread {} {}%".format(sttinf, numero, porcentagem * 10))
                     porcentagem += 1
             else:
-                self._exibirInfoTreinamento(self.batch_size, len(recipiente[0]))
+                self._exibirInfoTreinamento(self.frames, len(recipiente[0]))
         
         print("[{}] Fim classificação Thread {}.".format(sttinf, numero))
         
@@ -185,7 +184,7 @@ class Treinamento:
         # Lê o video até o fim
         while True:
             
-            if not ((self.framesTotal - self.feitos) >= self.batch_size):
+            if not ((self.framesTotal - self.feitos) >= self.frames):
                 print("[{}] Não tem frames suficientes para completar o batch!".format(sttinf))
                 break
             
@@ -198,7 +197,7 @@ class Treinamento:
                     self._fit()
                 self.feitos += len(self._data_set[0])
                 
-                print("[{}] Fim do treinamento do batch. {}% Completo".format(sttwrn, int((self.feitos/self.framesTotal)*100)))
+                print("[{}] Fim do treinamento do batch. {}% Completo".format(sttwrn, int((self.feitos/self.frames)*100)))
 
                 # limpa o batch
                 self._data_set[0].clear()
@@ -222,10 +221,10 @@ class Treinamento:
             historico = inteligencia.modelo.fit(
                 numpy.array(self._data_set[0])/255.0, 
                 numpy.array(self._data_set[1]),
-                batch_size=100,
+                batch_size=self.batch_size,
                 epochs=epochs, 
                 verbose=1, 
-                shuffle=self._suffle)
+                shuffle=self.suffle)
 
             self._atualizarLog(historico)
             
@@ -238,14 +237,14 @@ class Treinamento:
         treinar = True
         while treinar:
             gerador = TimeseriesGenerator(
-                numpy.array(self._data_set[0][:self.batch_size])/255.0, 
-                numpy.array(self._data_set[1][:self.batch_size]), 
-                length=self._time_steps,
-                batch_size=100)
+                numpy.array(self._data_set[0])/255.0, 
+                numpy.array(self._data_set[1]), 
+                length=self.time_steps,
+                batch_size=self.batch_size)
             historico = inteligencia.modelo.fit_generator(
                 gerador,
                 epochs=self.epochs,
-                shuffle=self._suffle,
+                shuffle=self.suffle,
                 verbose=1)
             self._atualizarLog(historico)
 

@@ -41,22 +41,19 @@ def uso():
     print("Opções modo Treinamento:")
     print("  --sprites=<caminho>:")
     print("       Arquivo yaml com as informações de sprites.")
-    print("  --exibir:")
-    print("       Exibir saida da visão com estátisticas sobre o treinamento.")
-    print("  --qualidade:")
-    print("       Exibe informações sobre a qualidade de cada frame observado.")
-    print("  --tempo:")
-    print("       Exibe estatísticas sobre o tempo dos frames.")
     print("  --epochs=<int>:")
     print("       Número de épocas para cada batch. Padrão: 50.")
     print("  --batch_size=<int>:")
-    print("       Quantidade de frames por batch. Padrão: 300.")
+    print("       Tamanho do batch de treinamento.")
     print("  --nthreads=<int>:")
     print("       Quantidade de threads para a classificação do video.")
     print("       Por padrão é 4.")
-    print("  --not_suffle:")
+    print("  --suffle:")
     print("       Se deve misturar as imagens que são passadas para o treinamento.")
     print("       Por padrão é verdadeiro.")
+    print("  --frames:")
+    print("       Quantidade de frames a serem processados e passados e usados como")
+    print("       dataset do treinamento.")
     print("")
     print("Opções modo Jogar:")
     print("  --room=<arquivo room>:")
@@ -86,11 +83,11 @@ def treinar(params):
         sprites=params.sprites,
         epochs=params.epochs,
         batch_size=params.batch_size,
-        exibir=params.exibir,
         nome=params.nome,
         nthreads=params.nthreads,
         time_steps=params.time_steps,
-        not_suffle=params.not_suffle)
+        suffle=params.suffle,
+        frames=params.frames)
     
     treino.iniciar()
 

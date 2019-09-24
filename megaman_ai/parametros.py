@@ -18,18 +18,16 @@ class Parametros:
     A lista de parâmetros é criada a partir dos atributos da classe.
     """
     treinamento = False
-    exibir = False
     sprites = "megaman.yaml"
     ajuda = False
-    qualidade = False
-    tempo = False
-    not_suffle = False
+    suffle = True
+    frames = 1000
     room = "MegaMan3.nes"
     fceux = "/usr/games/fceux"
     fceux_script = "server.lua"
     nome = ""
     epochs = 50
-    batch_size = 300
+    batch_size = 100
     nthreads = 1
     config = ""
     time_steps = 10
@@ -52,6 +50,7 @@ class Parametros:
         self.batch_size = int(self.batch_size)
         self.nthreads = int(self.nthreads)
         self.time_steps = int(self.time_steps)
+        self.frames = int(self.frames)
 
     @staticmethod
     def getopts():

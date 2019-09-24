@@ -1,0 +1,40 @@
+# Arquivo de configuração de parâmetros Megaman-AI.
+# Essas opções podem ser sobrecarregadas por parâmetros 
+# na linha de comando.
+
+# Modo de execução
+#    Se treinamento é False, significa que é jogar.
+#    Se True executa o treinamento.
+# treinamento: False
+
+# Arquivo de sprites
+# sprites: "megaman.yaml"
+
+# Misturar ou não os conjunto de dados no treinamento
+# suffle: True
+
+# Arquivo com room do jogo.
+# room: "MegaMan3.nes"
+
+# Caminho para o executavel do fceux
+# fceux: "/usr/games/fceux"
+
+# Script lua de servidor
+# fceux_script: "server.lua"
+
+# Nome da IA a ser usada na execução.
+# nome: ""
+
+# Quantidade de épocas de treinamento
+# epochs: 50
+
+# Tamanho do batchsize
+# batch_size: 100
+
+# Numero de threads a ser usadas para treinamento
+#   Caso a rede for rnn o numero de threads deve ser 1.
+# nthreads: 1
+
+# Tamanho da sequencia de frames para uma classificação.
+#   Quanto maior maior o tempo de processamento.
+# time_steps: 10
