@@ -16,7 +16,7 @@ from threading import RLock, Thread, active_count
 from tensorflow.keras.preprocessing.sequence import TimeseriesGenerator
 
 from . import inteligencia, visao
-from .comuns import sttinf, sttwrn
+from .comuns import sttinf, sttwrn, mm_resize
 
 class Treinamento:
     """Armazena informações sobre uma instancia de treinamento
@@ -33,10 +33,10 @@ class Treinamento:
         self.suffle = kwargs.get("suffle", True)
         self.nthreads = kwargs.get("nthreads", 1)
         self.time_steps = kwargs.get("time_steps", 10)
+        self.fps = kwargs.get("fps", 30)
         self._frameAnterior = None, -1
         self._data_set = [],[]
         self._log = open("logs/{}.log".format(self.nome), "a")
-        self._rnn = True # Parametrizar
         self._iterativo = False # Parametrizar
         self._lock_video = RLock()
         self._frames_thread = int(self.frames/self.nthreads)
@@ -133,12 +133,19 @@ class Treinamento:
         vis = visao.MegaMan(self.sprites)
         porcentagem = 0
         parte_100 = int(self._frames_thread * 0.1)
+        taxa_coleta = int(30/self.frames)
         
         print("[{}] Thread {} iniciada.".format(sttinf, numero))
 
         while len(recipiente[0]) < self._frames_thread:
             self._lock_video.acquire()
+            
+            # Descarte do frames
+            for _ in range(taxa_coleta-1):
+                self._video.read()
+            
             frame = self._video.read()[1]
+            
             self._lock_video.release()
             
             if frame is None:
@@ -149,17 +156,9 @@ class Treinamento:
             # atualizar o estado do objeto megaman usando o frame
             vis.atualizar(vis.transformar(frame), 20)
             
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-            for s in (0.5, 0.5, 0.75):
-                frame = cv2.resize(frame, None, fx=s, fy=s, interpolation=cv2.INTER_BITS)
-            frame[frame <= 40] = 0
-
-            # treina a rede com o frame anterior e o rótulo do frame atual
-            # apenas nas transições
-            temAnterior = not frameAnterior[0] is None
+            frame = mm_resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
             
-            if temAnterior:
+            if not frameAnterior[0] is None:
                 # coloca no dataset
                 recipiente[0].append(frameAnterior[0].flatten())
                 recipiente[1].append(vis.rotulo)
@@ -191,10 +190,7 @@ class Treinamento:
             self._iniciarClassificacao()
 
             if len(self._data_set[0]) > 0:
-                if self._rnn:
-                    self._fitRNN()
-                else:
-                    self._fit()
+                self._fitRNN()
                 self.feitos += len(self._data_set[0])
                 
                 print("[{}] Fim do treinamento do batch. {}% Completo".format(sttwrn, int((self.feitos/self.frames)*100)))
@@ -211,28 +207,7 @@ class Treinamento:
             tam_batch = len(self._data_set[0]))
         
         self._log.write(str(info))
-        
-    def _fit(self):
-        treinar = True
-        epochs = self.epochs
-        ultimo = 0
 
-        while treinar:
-            historico = inteligencia.modelo.fit(
-                numpy.array(self._data_set[0])/255.0, 
-                numpy.array(self._data_set[1]),
-                batch_size=self.batch_size,
-                epochs=epochs, 
-                verbose=1, 
-                shuffle=self.suffle)
-
-            self._atualizarLog(historico)
-            
-            atual = numpy.mean(historico.history["acc"])
-            treinar = ((atual <= 0.80) or ((atual - ultimo) > 0.005))
-            print("\033[31mVariação: ", (atual - ultimo), "\033[0;0m")
-            ultimo = atual
-    
     def _fitRNN(self):
         treinar = True
         while treinar:

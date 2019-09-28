@@ -36,11 +36,14 @@ def uso():
     print("       Salto de tempo em frames.")
     print("  --nome=<nome inteligencia>:")
     print("       Caso a inteligencia exista ela é carregada.")
-    print("       Caso não exista, será necessário cria-la, olhe o arquivo nova_ia.py.")
-    print("")
-    print("Opções modo Treinamento:")
+    print("       Caso não exista, será necessário cria-la, olhe o arquivo nova.py.")
     print("  --sprites=<caminho>:")
     print("       Arquivo yaml com as informações de sprites.")
+    print("  --fps=<int>:")
+    print("       Numero de fps usados para treinamento e jogo. Os valores aceitos")
+    print("       são 30, 15, 10 ou 5.")
+    print("")
+    print("Opções modo Treinamento:")
     print("  --epochs=<int>:")
     print("       Número de épocas para cada batch. Padrão: 50.")
     print("  --batch_size=<int>:")
@@ -87,7 +90,8 @@ def treinar(params):
         nthreads=params.nthreads,
         time_steps=params.time_steps,
         suffle=params.suffle,
-        frames=params.frames)
+        frames=params.frames,
+        fps=params.fps)
     
     treino.iniciar()
 
@@ -106,7 +110,8 @@ def jogar(params):
         sprites = params.sprites,
         fceux=params.fceux,
         time_steps=params.time_steps,
-        fceux_script=params.fceux_script)
+        fceux_script=params.fceux_script,
+        fps=params.fps)
     
     jogar.iniciar()
 

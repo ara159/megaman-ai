@@ -31,6 +31,7 @@ class Parametros:
     nthreads = 1
     config = ""
     time_steps = 10
+    fps = 30
 
     def parse(self, opts):
         """Preenche o objeto com as opções recebidas"""
@@ -80,18 +81,14 @@ class Parametros:
         if len(self.nome) == 0:
             print("É necessário passar o nome da inteligencia.")
             tudoOk = False
+
         if not path.isfile("modelos/"+self.nome+".h5"):
             print("A inteligência {} não existe em modelos.".format(self.nome))
             tudoOk = False
-        return tudoOk
-
-    def validarTreinamento(self):
-        """Executa a validação das informações recebidas
-        para o modo treinamento"""
         
-        # TODO: Verificar se os videos passados são do formato aceito
-
-        tudoOk = self._validarGeral()
+        if not self.fps in (30, 15, 10, 5):
+            print("Valores para fps são inválidos!")
+            tudoOk = False
 
         # Verifica existência do arquivo de sprites
         if not path.isfile(self.sprites):
@@ -122,6 +119,16 @@ class Parametros:
             else:
                 print("Pasta '{}' não existe.".format(pasta))
                 tudoOk = False
+
+        return tudoOk
+
+    def validarTreinamento(self):
+        """Executa a validação das informações recebidas
+        para o modo treinamento"""
+        
+        # TODO: Verificar se os videos passados são do formato aceito
+
+        tudoOk = self._validarGeral()
 
         # Verifica se os videos foram passados
         if len(self.videos) == 0:

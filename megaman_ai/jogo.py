@@ -8,12 +8,8 @@ import os
 import cv2
 import numpy
 import yaml
-from .comuns import sttinf, sttwrn
+from .comuns import sttinf, sttwrn, mm_resize
 from . import inteligencia, visao
-
-# TODO: Usar um "whereis" para encontrar o caminho do executável do emulador
-# TODO: É obrigatório passar o arquivo com os sprites para modo jogar
-# TODO: Implemetar tradução de indice de predict para ação
 
 class Jogo:
 
@@ -22,6 +18,7 @@ class Jogo:
         self.classes = self._getClasses(sprites)
         self.comandos = self._getComandos(sprites)
         self.fceux = kwargs.get("fceux", "/usr/games/fceux")
+        self.fps = kwargs.get("fps", 30)
         script_lua = kwargs.get("fceux_script", "lua/server.lua")
         self.fceux_script = os.path.abspath(script_lua)
         self.time_steps = time_steps
@@ -30,6 +27,8 @@ class Jogo:
         self._conectado = False
         self._caminhoFrame = "/tmp/.megamanAI.screen"
         self._winScala = 2
+        self._ultimo_comando = {}
+        self._taxa_coleta = int(30/self.fps)
         self.repeticoesA = 0
         self.repeticoesB = 0
 
@@ -42,8 +41,12 @@ class Jogo:
         self._conectar()
 
         print("[{}] Iniciando modo jogar".format(sttinf))
-        # executa a função jogar
-        self._jogar()
+        
+        try:
+            # executa a função jogar
+            self._jogar()
+        except:
+            print("[{}] Execução finalizada!".format(sttwrn))
         
         # verifica se o emulador continua ativo (caso tenha dado algum erro com o servidor)
         if self._emulador.isAlive():
@@ -55,6 +58,12 @@ class Jogo:
 
     def obterFrame(self):
         """Obtém o frame atual do emulador"""
+        
+        # Descarta frames desnecessários
+        for i in range(self._taxa_coleta):
+            self._conexao.recv(4096)
+            self._enviarComando(self._ultimo_comando)
+        
         try:
             # Recebe uma mensagem de 'pode ler a tela'
             self._conexao.recv(4096)
@@ -85,10 +94,7 @@ class Jogo:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
                 if not frame is None:
-                    for s in (0.5, 0.5, 0.75):
-                        frame = cv2.resize(frame, None, fx=s, fy=s, interpolation=cv2.INTER_BITS)
-                    frame[frame <= 40] = 0
-                    mem.append(frame.flatten())
+                    mem.append(mm_resize(frame).flatten())
             
             acao = inteligencia.modelo.predict(numpy.array([mem])/255.0)
             classe = numpy.argmax(acao[0])
@@ -96,6 +102,7 @@ class Jogo:
             print("=> {:20.20}: {:06.2f}%".format(self.classes[classe], acao[0][classe]*100))
             
             comando = self.comandos[classe].copy()
+            
             # trata o problema do 'A' pressionado infinitamente
             if "A" in comando:
                 self.repeticoesA += 1    
@@ -183,6 +190,8 @@ class Jogo:
         except BrokenPipeError:
             print("[{}] Conexão fechada pelo servidor".format(sttwrn))
             self._conectado = False
+
+        self._ultimo_comando = comando
 
     def _getClasses(self, sprites):
         classes = []
