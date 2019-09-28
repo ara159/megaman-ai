@@ -30,7 +30,7 @@ normal(){
     pip3 install -r requirements.txt
 }
 
-if [ $1 == "--proxy" ]
+if [ "$1" == "--proxy" ]
 then
     proxy
 else
