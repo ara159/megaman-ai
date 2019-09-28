@@ -195,13 +195,12 @@ class Jogo:
 
     def _getClasses(self, sprites):
         classes = []
-        for s in list(yaml.load(open(sprites, "r").read())['estados'].keys()):
+        for s in list(sprites['estados'].keys()):
             classes.append(s+"-l")
             classes.append(s+"-r")
         return classes
     
     def _getComandos(self, sprites):
-        sprites = yaml.load(open(sprites, "r").read())
         comandos = []
 
         for estado in sprites['estados']:
