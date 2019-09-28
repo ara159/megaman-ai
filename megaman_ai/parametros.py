@@ -24,7 +24,7 @@ class Parametros:
     frames = 1000
     room = "MegaMan3.nes"
     fceux = "/usr/games/fceux"
-    fceux_script = "server.lua"
+    fceux_script = "lua/server.lua"
     nome = ""
     epochs = 50
     batch_size = 100
@@ -100,7 +100,7 @@ class Parametros:
 
         # Abre o arquivo sprites como yaml
         try:
-            self.sprites = yaml.full_load(open(self.sprites).read())
+            self.sprites = yaml.load(open(self.sprites).read())
         except:
             print("Não foi possível abrir o arquivo {} como yaml.".format(self.sprites), end="")
             print("Verifique se a sintaxe está correta.")
@@ -191,6 +191,6 @@ def parse():
     parametros = Parametros()
     parametros.parse(opts)
     if len(parametros.config) > 0 and path.exists(parametros.config):
-        parametros.__dict__ = yaml.full_load(open(parametros.config, "r").read())
+        parametros.__dict__ = yaml.load(open(parametros.config, "r").read())
         parametros.parse(opts)
     return parametros

@@ -20,13 +20,16 @@
 # fceux: "/usr/games/fceux"
 
 # Script lua de servidor
-# fceux_script: "server.lua"
+# fceux_script: "lua/server.lua"
 
 # Nome da IA a ser usada na execução.
 # nome: ""
 
 # Quantidade de épocas de treinamento
 # epochs: 50
+
+# Quantidade de frames que serão classificados
+# frames: 1000
 
 # Tamanho do batchsize
 # batch_size: 100

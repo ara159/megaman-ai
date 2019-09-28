@@ -90,7 +90,7 @@ class Jogo:
                     frame[frame <= 40] = 0
                     mem.append(frame.flatten())
             
-            acao = inteligencia.modelo.predict(numpy.array([mem]))
+            acao = inteligencia.modelo.predict(numpy.array([mem])/255.0)
             classe = numpy.argmax(acao[0])
             
             print("=> {:20.20}: {:06.2f}%".format(self.classes[classe], acao[0][classe]*100))
