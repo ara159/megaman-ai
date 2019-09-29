@@ -64,6 +64,8 @@ class Jogo:
             self._conexao.recv(4096)
             self._enviarComando(self._ultimo_comando)
         
+        print("."*self._taxa_coleta)
+        
         try:
             # Recebe uma mensagem de 'pode ler a tela'
             self._conexao.recv(4096)

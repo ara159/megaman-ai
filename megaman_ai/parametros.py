@@ -52,6 +52,7 @@ class Parametros:
         self.nthreads = int(self.nthreads)
         self.time_steps = int(self.time_steps)
         self.frames = int(self.frames)
+        self.fps = int(self.fps)
 
     @staticmethod
     def getopts():

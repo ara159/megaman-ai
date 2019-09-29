@@ -94,11 +94,12 @@ class Treinamento:
     Nome IA: {}
     Epochs: {}
     Batch Size: {}
+    FPS: {}
     Threads: {}
     Frames/fit: {}
     Videos: {}
     """.format(self.nome, self.epochs, self.batch_size, 
-        self.nthreads, self.frames, self.videos))
+        self.fps, self.nthreads, self.frames, self.videos))
     
     def _iniciarClassificacao(self):
         frame_set = []
@@ -177,7 +178,7 @@ class Treinamento:
         
     def _treinar(self):
         """Executa o treinamento em um video"""
-        self.framesTotal = int(self._video.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.framesTotal = int(self._video.get(cv2.CAP_PROP_FRAME_COUNT)/int(30/self.fps))
         self.feitos = 0
 
         # Lê o video até o fim
@@ -193,7 +194,7 @@ class Treinamento:
                 self._fitRNN()
                 self.feitos += len(self._data_set[0])
                 
-                print("[{}] Fim do treinamento do batch. {}% Completo".format(sttwrn, int((self.feitos/self.frames)*100)))
+                print("[{}] Fim do treinamento do batch. {}% Completo".format(sttwrn, int((self.feitos/self.framesTotal)*100)))
 
                 # limpa o batch
                 self._data_set[0].clear()
