@@ -39,7 +39,11 @@ class Jogo:
 
         # conecta ao emulador
         self._conectar()
-
+        
+        if not self._conectado:
+            print("[{}] Não foi possivel conectar com o emulador!".format(sttwrn))
+            return
+        
         print("[{}] Iniciando modo jogar".format(sttinf))
         
         try:
