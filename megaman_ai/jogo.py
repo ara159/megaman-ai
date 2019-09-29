@@ -45,8 +45,8 @@ class Jogo:
         try:
             # executa a função jogar
             self._jogar()
-        except:
-            print("[{}] Execução finalizada!".format(sttwrn))
+        except Exception as erro:
+            print("[{}] Execução finalizada ({})!".format(sttwrn, erro))
         
         # verifica se o emulador continua ativo (caso tenha dado algum erro com o servidor)
         if self._emulador.isAlive():
@@ -157,13 +157,13 @@ class Jogo:
 
     def _conectar(self):
         """Se conecta ao emulador"""
-        tentativas = 10
+        tentativas = 100
 
         while tentativas > 0:
             try:
         
                 # Espera um tempinho para dar tempo de começar a executar o servidor
-                time.sleep(1)
+                time.sleep(2)
 
                 # tenta se conectar
                 self._conexao = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
